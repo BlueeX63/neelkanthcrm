@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Image as ImageIcon, Pencil } from "lucide-react";
 import Link from "next/link";
 import Select from "./Select";
+import ImageGalleryModal from "./ImageGalleryModal";
 
 interface Column {
   key: string;
@@ -25,6 +26,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [galleryImages, setGalleryImages] = useState<string[] | null>(null);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -56,7 +58,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden flex flex-col"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden w-full"
     >
       <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {title && <h2 className="text-xl font-semibold text-gray-900 tracking-tight">{title}</h2>}
@@ -116,13 +118,43 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                         </button>
                       )
                     ) : col.key === "photo" ? (
-                      <div className="w-10 h-10 rounded-md bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm">
-                        {row[col.key] && row[col.key] !== "-" ? (
-                          <img src={row[col.key]} alt="Item photo" className="w-full h-full object-cover" />
-                        ) : (
-                          <ImageIcon className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
+                      (() => {
+                        // Extract all photo URLs from the row
+                        const photos = [row.photo_1, row.photo_2, row.photo_3, row.photo_4].filter(Boolean);
+                        // Fallback if they only have the old 'photo' field
+                        if (photos.length === 0 && row.photo && row.photo !== "-") {
+                          photos.push(row.photo);
+                        }
+
+                        if (photos.length === 0) {
+                          return <span className="text-gray-400 text-xs font-medium italic">No Image</span>;
+                        }
+
+                        return (
+                          <div 
+                            className="flex items-center -space-x-3 cursor-pointer group/photos"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setGalleryImages(photos);
+                            }}
+                          >
+                            {photos.slice(0, 3).map((p, i) => (
+                              <div 
+                                key={i} 
+                                className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-gray-100 relative shadow-sm transition-transform duration-300 group-hover/photos:scale-105"
+                                style={{ zIndex: 10 - i }}
+                              >
+                                <img src={p} alt={`Order Photo ${i + 1}`} className="w-full h-full object-cover" />
+                              </div>
+                            ))}
+                            {photos.length > 3 && (
+                              <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-800 text-white flex items-center justify-center text-xs font-bold relative z-0 shadow-sm">
+                                +{photos.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()
                     ) : col.key === "status" ? (
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
                         row[col.key] === "Active" || row[col.key] === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" :
@@ -201,6 +233,14 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
           </div>
         )}
       </div>
+
+      {/* Fullscreen Lightbox Modal */}
+      {galleryImages && (
+        <ImageGalleryModal 
+          images={galleryImages} 
+          onClose={() => setGalleryImages(null)} 
+        />
+      )}
     </motion.div>
   );
 }

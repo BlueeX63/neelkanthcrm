@@ -128,6 +128,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   // Customer Operations
   const addCustomer = async (customer: any) => {
     try {
+      setIsLoading(true);
       const dbCustomer = {
         customer_name: customer.customerName,
         customer_code: customer.customerCode,
@@ -150,33 +151,42 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }, ...prev]);
       }
     } catch (error) { console.error("Error adding customer:", error); }
+    finally { setIsLoading(false); }
   };
   
   const updateCustomer = async (id: string, data: any) => {
     try {
-      const dbData: any = { ...data };
-      if (data.customerName) dbData.customer_name = data.customerName;
-      if (data.customerCode) dbData.customer_code = data.customerCode;
-      if (data.mobileNo) dbData.mobile_no = data.mobileNo;
-      if (data.gstNo) dbData.gst_no = data.gstNo;
+      setIsLoading(true);
+      const dbData: any = {};
+      if (data.customerName !== undefined) dbData.customer_name = data.customerName;
+      if (data.customerCode !== undefined) dbData.customer_code = data.customerCode;
+      if (data.mobileNo !== undefined) dbData.mobile_no = data.mobileNo;
+      if (data.address !== undefined) dbData.address = data.address;
+      if (data.city !== undefined) dbData.city = data.city;
+      if (data.gstNo !== undefined) dbData.gst_no = data.gstNo;
+      if (data.status !== undefined) dbData.status = data.status;
       
       const { error } = await supabase.from("customers").update(dbData).eq("id", id);
       if (error) throw error;
       setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
     } catch (error) { console.error("Error updating customer:", error); }
+    finally { setIsLoading(false); }
   };
   
   const deleteCustomer = async (id: string) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.from("customers").delete().eq("id", id);
       if (error) throw error;
       setCustomers(prev => prev.filter(c => c.id !== id));
     } catch (error) { console.error("Error deleting customer:", error); }
+    finally { setIsLoading(false); }
   };
 
   // User Operations
   const addUser = async (user: any) => {
     try {
+      setIsLoading(true);
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,8 +200,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
 
       const { user: authUser } = await response.json();
 
-      // Optimistically add to UI, but note that `id` might be different if we don't fetch the public.users row immediately
-      // The trigger creates the row, so we can just use the authUser.id
       setUsers(prev => [{
         id: authUser.id,
         firstName: user.firstName,
@@ -205,32 +213,43 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         action: "Edit"
       }, ...prev]);
     } catch (error) { console.error("Error adding user:", error); }
+    finally { setIsLoading(false); }
   };
   
   const updateUser = async (id: string, data: any) => {
     try {
-      const dbData: any = { ...data };
-      if (data.firstName) dbData.first_name = data.firstName;
-      if (data.lastName) dbData.last_name = data.lastName;
-      if (data.userType) dbData.user_type = data.userType;
+      setIsLoading(true);
+      const dbData: any = {};
+      if (data.firstName !== undefined) dbData.first_name = data.firstName;
+      if (data.lastName !== undefined) dbData.last_name = data.lastName;
+      if (data.email !== undefined) dbData.email = data.email;
+      if (data.phone !== undefined) dbData.phone = data.phone;
+      if (data.userType !== undefined) dbData.user_type = data.userType;
+      if (data.status !== undefined) dbData.status = data.status;
+      if (data.name !== undefined) dbData.name = data.name;
+      if (data.role !== undefined) dbData.role = data.role;
       
       const { error } = await supabase.from("users").update(dbData).eq("id", id);
       if (error) throw error;
       setUsers(prev => prev.map(u => u.id === id ? { ...u, ...data } : u));
     } catch (error) { console.error("Error updating user:", error); }
+    finally { setIsLoading(false); }
   };
   
   const deleteUser = async (id: string) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.from("users").delete().eq("id", id);
       if (error) throw error;
       setUsers(prev => prev.filter(u => u.id !== id));
     } catch (error) { console.error("Error deleting user:", error); }
+    finally { setIsLoading(false); }
   };
 
   // Karigar Operations
   const addKarigar = async (karigar: any) => {
     try {
+      setIsLoading(true);
       const dbKarigar = {
         karigar_name: karigar.karigarName,
         karigar_code: karigar.karigarCode,
@@ -249,32 +268,39 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }, ...prev]);
       }
     } catch (error) { console.error("Error adding karigar:", error); }
+    finally { setIsLoading(false); }
   };
   
   const updateKarigar = async (id: string, data: any) => {
     try {
-      const dbData: any = { ...data };
-      if (data.karigarName) dbData.karigar_name = data.karigarName;
-      if (data.karigarCode) dbData.karigar_code = data.karigarCode;
-      if (data.mobileNo) dbData.mobile_no = data.mobileNo;
+      setIsLoading(true);
+      const dbData: any = {};
+      if (data.karigarName !== undefined) dbData.karigar_name = data.karigarName;
+      if (data.karigarCode !== undefined) dbData.karigar_code = data.karigarCode;
+      if (data.mobileNo !== undefined) dbData.mobile_no = data.mobileNo;
+      if (data.status !== undefined) dbData.status = data.status;
 
       const { error } = await supabase.from("karigars").update(dbData).eq("id", id);
       if (error) throw error;
       setKarigars(prev => prev.map(k => k.id === id ? { ...k, ...data } : k));
     } catch (error) { console.error("Error updating karigar:", error); }
+    finally { setIsLoading(false); }
   };
   
   const deleteKarigar = async (id: string) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.from("karigars").delete().eq("id", id);
       if (error) throw error;
       setKarigars(prev => prev.filter(k => k.id !== id));
     } catch (error) { console.error("Error deleting karigar:", error); }
+    finally { setIsLoading(false); }
   };
 
   // Item Operations
   const addItem = async (item: any) => {
     try {
+      setIsLoading(true);
       const dbItem = {
         item_name: item.itemName,
         short_name: item.shortName,
@@ -299,37 +325,71 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }, ...prev]);
       }
     } catch (error) { console.error("Error adding item:", error); }
+    finally { setIsLoading(false); }
   };
   
   const updateItem = async (id: string, data: any) => {
     try {
-      const dbData: any = { ...data };
-      if (data.itemName) dbData.item_name = data.itemName;
-      if (data.shortName) dbData.short_name = data.shortName;
-      if (data.groupName) dbData.group_name = data.groupName;
-      if (data.groupType) dbData.group_type = data.groupType;
+      setIsLoading(true);
+      const dbData: any = {};
+      if (data.itemName !== undefined) dbData.item_name = data.itemName;
+      if (data.shortName !== undefined) dbData.short_name = data.shortName;
+      if (data.groupName !== undefined) dbData.group_name = data.groupName;
+      if (data.groupType !== undefined) dbData.group_type = data.groupType;
+      if (data.touch !== undefined) dbData.touch = data.touch;
+      if (data.status !== undefined) dbData.status = data.status;
 
       const { error } = await supabase.from("items").update(dbData).eq("id", id);
       if (error) throw error;
       setItems(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
     } catch (error) { console.error("Error updating item:", error); }
+    finally { setIsLoading(false); }
   };
   
   const deleteItem = async (id: string) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.from("items").delete().eq("id", id);
       if (error) throw error;
       setItems(prev => prev.filter(i => i.id !== id));
     } catch (error) { console.error("Error deleting item:", error); }
+    finally { setIsLoading(false); }
   };
 
   // Order Operations
   const addOrder = async (order: any) => {
     try {
+      setIsLoading(true);
+      // Upload images if any
+      const photoUrls: (string | null)[] = [null, null, null, null];
+      if (order.files && order.files.length > 0) {
+        for (let i = 0; i < order.files.length; i++) {
+          const file = order.files[i];
+          if (file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `orders/${fileName}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('order-images')
+              .upload(filePath, file);
+
+            if (!uploadError) {
+              const { data: publicUrlData } = supabase.storage
+                .from('order-images')
+                .getPublicUrl(filePath);
+              photoUrls[i] = publicUrlData.publicUrl;
+            } else {
+              console.error("Upload error:", uploadError);
+              alert(`Image upload failed: ${uploadError.message}. Please check your Supabase Storage policies.`);
+            }
+          }
+        }
+      }
+
       // Find latest order number
       let nextOrderNo = "0005001";
       if (orders.length > 0) {
-        // Sort by orderNo descending
         const sortedOrders = [...orders].sort((a, b) => b.orderNo.localeCompare(a.orderNo));
         const highestOrderNoStr = sortedOrders[0].orderNo;
         const highestOrderNo = parseInt(highestOrderNoStr, 10);
@@ -341,22 +401,32 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const dbOrder = {
         order_no: nextOrderNo,
         date: new Date().toLocaleDateString("en-GB").replace(/\//g, "-"),
-        photo: "-",
-        name: order.name,
-        status: "Assign Karigar",
-        cad: "-",
-        casting: "-",
-        filling: "-",
-        stone: "-",
-        polish: "-",
+        photo: photoUrls[0] || "-",
+        name: order.name || "-",
+        status: order.status || "Assign Karigar",
+        cad: order.cad || "-",
+        casting: order.casting || "-",
+        filling: order.filling || "-",
+        stone: order.stone || "-",
+        polish: order.polish || "-",
         customer_id: order.customerId || null,
         color_code: order.colorCode,
-        ...order
+        delivery_date: order.deliveryDate || null,
+        product_id: order.productId || null,
+        g_wt: order.gWt || null,
+        l_wt: order.lWt || null,
+        n_wt: order.nWt || null,
+        purity: order.purity || null,
+        pcs: order.pcs || null,
+        size: order.size || null,
+        height: order.height || null,
+        width: order.width || null,
+        order_description: order.orderDescription || null,
+        photo_1: photoUrls[0] || null,
+        photo_2: photoUrls[1] || null,
+        photo_3: photoUrls[2] || null,
+        photo_4: photoUrls[3] || null,
       };
-
-      // Remove properties that are not in DB schema but might be in 'order'
-      delete dbOrder.customerName;
-      delete dbOrder.action;
 
       const { data, error } = await supabase.from("orders").insert(dbOrder).select().single();
       if (error) throw error;
@@ -370,27 +440,53 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }, ...prev]);
       }
     } catch (error) { console.error("Error adding order:", error); }
+    finally { setIsLoading(false); }
   };
   
   const updateOrder = async (id: string, data: any) => {
     try {
-      const dbData: any = { ...data };
-      if (data.orderNo) dbData.order_no = data.orderNo;
-      if (data.customerId) dbData.customer_id = data.customerId;
-      if (data.colorCode) dbData.color_code = data.colorCode;
+      setIsLoading(true);
+      const dbData: any = {};
+      if (data.orderNo !== undefined) dbData.order_no = data.orderNo;
+      if (data.customerId !== undefined) dbData.customer_id = data.customerId;
+      if (data.colorCode !== undefined) dbData.color_code = data.colorCode;
+      if (data.photo !== undefined) dbData.photo = data.photo;
+      if (data.name !== undefined) dbData.name = data.name;
+      if (data.status !== undefined) dbData.status = data.status;
+      if (data.cad !== undefined) dbData.cad = data.cad;
+      if (data.casting !== undefined) dbData.casting = data.casting;
+      if (data.filling !== undefined) dbData.filling = data.filling;
+      if (data.stone !== undefined) dbData.stone = data.stone;
+      if (data.polish !== undefined) dbData.polish = data.polish;
+      
+      // New mapping logic for updated order schema
+      if (data.deliveryDate !== undefined) dbData.delivery_date = data.deliveryDate;
+      if (data.productId !== undefined) dbData.product_id = data.productId;
+      if (data.gWt !== undefined) dbData.g_wt = data.gWt;
+      if (data.lWt !== undefined) dbData.l_wt = data.lWt;
+      if (data.nWt !== undefined) dbData.n_wt = data.nWt;
+      if (data.purity !== undefined) dbData.purity = data.purity;
+      if (data.pcs !== undefined) dbData.pcs = data.pcs;
+      if (data.size !== undefined) dbData.size = data.size;
+      if (data.height !== undefined) dbData.height = data.height;
+      if (data.width !== undefined) dbData.width = data.width;
+      if (data.orderDescription !== undefined) dbData.order_description = data.orderDescription;
 
       const { error } = await supabase.from("orders").update(dbData).eq("id", id);
       if (error) throw error;
       setOrders(prev => prev.map(o => o.id === id ? { ...o, ...data } : o));
     } catch (error) { console.error("Error updating order:", error); }
+    finally { setIsLoading(false); }
   };
   
   const deleteOrder = async (id: string) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.from("orders").delete().eq("id", id);
       if (error) throw error;
       setOrders(prev => prev.filter(o => o.id !== id));
     } catch (error) { console.error("Error deleting order:", error); }
+    finally { setIsLoading(false); }
   };
 
   return (

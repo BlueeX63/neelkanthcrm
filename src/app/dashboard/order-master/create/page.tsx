@@ -39,6 +39,16 @@ export default function CreateOrderPage() {
     orderDescription: ""
   });
 
+  const [files, setFiles] = useState<(File | null)[]>([null, null, null, null]);
+
+  const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = [...files];
+      newFiles[index] = e.target.files[0];
+      setFiles(newFiles);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -55,7 +65,7 @@ export default function CreateOrderPage() {
   };
 
   const handleSave = () => {
-    addOrder(formData);
+    addOrder({ ...formData, files });
     router.push("/dashboard/order-master");
   };
 
@@ -175,10 +185,15 @@ export default function CreateOrderPage() {
       <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Upload Photos</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map(num => (
-            <div key={num} className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Upload Image {num}</label>
-              <input type="file" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 border border-gray-300 rounded-sm cursor-pointer" />
+          {[0, 1, 2, 3].map(index => (
+            <div key={index} className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700">Upload Image {index + 1}</label>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => handleFileChange(index, e)}
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 border border-gray-300 rounded-sm cursor-pointer" 
+              />
             </div>
           ))}
         </div>

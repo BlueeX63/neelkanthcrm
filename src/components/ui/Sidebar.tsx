@@ -27,7 +27,7 @@ const defaultMenuItems = [
   { name: "Order Master", href: "/dashboard/order-master", icon: ShoppingCart },
 ];
 
-export default function Sidebar({ isCollapsed }: { isCollapsed?: boolean }) {
+export default function Sidebar({ isCollapsed, onNavigate }: { isCollapsed?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   const [menuItems, setMenuItems] = useState(defaultMenuItems);
 
@@ -62,6 +62,7 @@ export default function Sidebar({ isCollapsed }: { isCollapsed?: boolean }) {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavigate}
               title={isCollapsed ? item.name : undefined}
               className={cn(
                 "group relative flex items-center px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-300",

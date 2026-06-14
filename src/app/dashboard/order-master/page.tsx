@@ -30,11 +30,12 @@ export default function OrderMasterPage() {
   const [isFilterAnimating, setIsFilterAnimating] = useState(false);
 
   const enrichedOrders = orders.map(order => {
-    if (!order.name && order.customerId) {
+    let finalName = order.name;
+    if ((!finalName || finalName === "-") && order.customerId) {
       const customer = customers.find(c => c.id === order.customerId);
-      return { ...order, name: customer?.customerName || "-" };
+      finalName = customer?.customerName || "-";
     }
-    return order;
+    return { ...order, name: finalName };
   });
 
   const filteredOrders = enrichedOrders.filter(order => {
