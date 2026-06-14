@@ -32,7 +32,7 @@ export default function Button({
         "relative z-10 flex items-center gap-2",
         variant === "primary" ? "mix-blend-difference text-white" : ""
       )}>
-        {children}
+        {children as React.ReactNode}
       </span>
       {variant === "primary" && (
         <motion.span 
