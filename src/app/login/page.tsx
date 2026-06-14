@@ -151,7 +151,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to log in. Please check your credentials.");
+      setError("Invalid login credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -200,8 +200,8 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="bg-red-500/10 text-red-400 p-4 rounded-xl text-sm border border-red-500/20 flex items-start animate-in fade-in duration-300 backdrop-blur-md">
-              <div className="font-medium">{error}</div>
+            <div className="bg-red-500/10 text-red-500 p-4 rounded-xl text-sm border border-red-500/30 flex items-start animate-in fade-in duration-300 backdrop-blur-md shadow-[0_0_15px_rgba(239,68,68,0.15)]">
+              <div className="font-semibold tracking-wide">{error}</div>
             </div>
           )}
 

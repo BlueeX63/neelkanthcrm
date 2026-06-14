@@ -212,7 +212,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         role: user.userType,
         action: "Edit"
       }, ...prev]);
-    } catch (error) { console.error("Error adding user:", error); }
+    } catch (error: any) { 
+      console.error("Error adding user:", error); 
+      throw error;
+    }
     finally { setIsLoading(false); }
   };
   
@@ -301,6 +304,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const addItem = async (item: any) => {
     try {
       setIsLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      const addedBy = user?.user_metadata?.first_name 
+        ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
+        : user?.email?.split('@')[0] || "Unknown User";
+
       const dbItem = {
         item_name: item.itemName,
         short_name: item.shortName,
@@ -308,7 +317,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         group_type: item.groupType,
         touch: item.touch,
         status: item.status,
-        added_by: "Super Admin", // Assuming fixed for now
+        added_by: addedBy,
         date: new Date().toLocaleDateString("en-GB").replace(/\//g, "-")
       };
       const { data, error } = await supabase.from("items").insert(dbItem).select().single();

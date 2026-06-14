@@ -19,14 +19,30 @@ export default function AddUserPage() {
     userType: "",
     status: "Active"
   });
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    addUser(formData);
-    router.push("/dashboard/users-master");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = async () => {
+    setError(null);
+    if (!formData.password || formData.password.length < 8) {
+      setError("Password format is not correct. It must be at least 8 characters long.");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await addUser(formData);
+      router.push("/dashboard/users-master");
+    } catch (err: any) {
+      setError(err.message || "Failed to create user.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -90,9 +106,19 @@ export default function AddUserPage() {
           </div>
         </div>
 
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm font-medium animate-in fade-in duration-200 mt-6">
+            {error}
+          </div>
+        )}
+
         <div className="flex justify-start gap-4 mt-8">
-          <Button variant="primary" onClick={handleSave}>save</Button>
-          <Button variant="secondary" className="bg-gray-50 hover:bg-gray-100" onClick={() => router.back()}>Cancel</Button>
+          <Button variant="primary" onClick={handleSave} disabled={isLoading}>
+            {isLoading ? "Saving..." : "Save"}
+          </Button>
+          <Button variant="secondary" className="bg-gray-50 hover:bg-gray-100" onClick={() => router.back()} disabled={isLoading}>
+            Cancel
+          </Button>
         </div>
       </div>
     </div>
