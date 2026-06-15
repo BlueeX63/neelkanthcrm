@@ -14,11 +14,20 @@ export default function PrintOrderPage() {
   const order = orders.find(o => o.id === id);
 
   useEffect(() => {
+    const handleAfterPrint = () => {
+      window.close();
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+
     // Automatically trigger print dialog after a short delay to allow images to load
     const timer = setTimeout(() => {
       window.print();
     }, 500);
-    return () => clearTimeout(timer);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
   }, [id]);
 
   if (!order) return <div className="p-6">Order not found</div>;
@@ -34,20 +43,21 @@ export default function PrintOrderPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
+        /* Hide sidebar, header, and global wrappers entirely on this page */
+        nav, header, aside, .fixed, .hidden.md\\:flex { display: none !important; }
+        
+        main { 
+          padding-left: 0 !important; 
+          margin: 0 !important; 
+          background: white !important;
+        }
+        body { 
+          background: white !important; 
+          margin: 0; 
+          padding: 0;
+        }
+
         @media print {
-          /* Hide sidebar, header, and global wrappers */
-          nav, header, aside, .fixed, .hidden.md\\:flex { display: none !important; }
-          /* Override layout margins */
-          main { 
-            padding-left: 0 !important; 
-            margin: 0 !important; 
-            background: white !important;
-          }
-          body { 
-            background: white !important; 
-            margin: 0; 
-            padding: 0;
-          }
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           .page-break { page-break-before: always; }
@@ -69,81 +79,60 @@ export default function PrintOrderPage() {
         </div>
 
         {/* Invoice Header */}
-        <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight uppercase">Order Slip</h1>
-            <p className="text-gray-500 mt-1 text-sm font-medium">Neelkanth CRM</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-bold text-gray-800 uppercase tracking-wide">Order Number</p>
-            <p className="text-2xl font-bold font-mono">{order.orderNo || 'N/A'}</p>
-            <p className="text-sm text-gray-500 mt-2">Date: {order.date || new Date().toLocaleDateString()}</p>
-          </div>
+        <div className="mb-6 border-b-2 border-black pb-4">
+          <h1 className="text-2xl font-black tracking-tight uppercase">Order Slip - Neelkanth CRM</h1>
         </div>
 
-        {/* Customer & Product Info */}
-        <div className="grid grid-cols-2 gap-8 mb-10">
-          <div className="bg-gray-50 p-5 rounded-md border border-gray-100">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-200 pb-2">Customer Details</h2>
-            <p className="text-lg font-bold text-gray-900">{customer?.customerName || order.name || 'Walk-in Customer'}</p>
-            <p className="text-sm text-gray-600 mt-1">{customer?.phone || ''}</p>
-            <p className="text-sm text-gray-600">{customer?.email || ''}</p>
-          </div>
-          <div className="bg-gray-50 p-5 rounded-md border border-gray-100">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-200 pb-2">Product Information</h2>
-            <p className="text-lg font-bold text-gray-900">{finalItemName === "-" ? 'Custom Item' : finalItemName}</p>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <div className="text-sm"><span className="text-gray-500">Color:</span> <span className="font-semibold">{order.colorCode || '-'}</span></div>
-              <div className="text-sm"><span className="text-gray-500">Purity:</span> <span className="font-semibold">{order.purity || '-'}</span></div>
-              <div className="text-sm"><span className="text-gray-500">Delivery:</span> <span className="font-semibold">{order.deliveryDate || '-'}</span></div>
-              <div className="text-sm"><span className="text-gray-500">Status:</span> <span className="font-semibold">{order.status || '-'}</span></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Order Specifications Table */}
-        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Specifications</h2>
-        <div className="border border-gray-200 rounded-md overflow-hidden mb-10">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200 uppercase text-xs text-gray-600 font-bold">
+        {/* Order Details Table */}
+        <div className="border border-gray-300 rounded-md overflow-hidden mb-8">
+          <table className="w-full text-left text-[10px] sm:text-xs">
+            <thead className="bg-gray-100 border-b border-gray-300 uppercase text-gray-700 font-bold">
               <tr>
-                <th className="p-3">G.Wt</th>
-                <th className="p-3">L.Wt</th>
-                <th className="p-3">N.Wt</th>
-                <th className="p-3">Size</th>
-                <th className="p-3">Pieces</th>
-                <th className="p-3">Dimensions</th>
+                <th className="p-2 border-r border-gray-300">Order No</th>
+                <th className="p-2 border-r border-gray-300">Date</th>
+                <th className="p-2 border-r border-gray-300">Customer</th>
+                <th className="p-2 border-r border-gray-300">Item</th>
+                <th className="p-2 border-r border-gray-300">Color</th>
+                <th className="p-2 border-r border-gray-300">Purity</th>
+                <th className="p-2 border-r border-gray-300">Delivery</th>
+                <th className="p-2 border-r border-gray-300">Status</th>
+                <th className="p-2 border-r border-gray-300">G.Wt</th>
+                <th className="p-2 border-r border-gray-300">L.Wt</th>
+                <th className="p-2 border-r border-gray-300">N.Wt</th>
+                <th className="p-2 border-r border-gray-300">Size</th>
+                <th className="p-2 border-r border-gray-300">Pcs</th>
+                <th className="p-2 border-r border-gray-300">Dims</th>
+                <th className="p-2">Notes</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              <tr className="font-semibold text-gray-900">
-                <td className="p-3">{order.gWt || '-'}</td>
-                <td className="p-3">{order.lWt || '-'}</td>
-                <td className="p-3">{order.nWt || '-'}</td>
-                <td className="p-3">{order.size || '-'}</td>
-                <td className="p-3">{order.pcs || '-'}</td>
-                <td className="p-3">{order.height && order.width ? `${order.height} x ${order.width}` : '-'}</td>
+            <tbody className="divide-y divide-gray-200">
+              <tr className="font-medium text-gray-900 bg-white">
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.orderNo || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.date || new Date().toLocaleDateString()}</td>
+                <td className="p-2 border-r border-gray-300">{customer?.customerName || order.name || 'Walk-in'}</td>
+                <td className="p-2 border-r border-gray-300">{finalItemName === "-" ? 'Custom' : finalItemName}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.colorCode || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.purity || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.deliveryDate || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.status || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.gWt || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.lWt || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.nWt || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.size || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.pcs || '-'}</td>
+                <td className="p-2 border-r border-gray-300 whitespace-nowrap">{order.height && order.width ? `${order.height}x${order.width}` : '-'}</td>
+                <td className="p-2 min-w-[120px]">{order.orderDescription || '-'}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Notes/Description */}
-        {order.orderDescription && (
-          <div className="mb-10">
-            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description / Notes</h2>
-            <div className="p-4 bg-yellow-50/50 border border-yellow-100 rounded-md text-sm text-gray-800 italic">
-              {order.orderDescription}
-            </div>
-          </div>
-        )}
-
         {/* Photos */}
-        <div className="mb-10 page-break">
+        <div className="mb-8">
           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Reference Images</h2>
           
           {(order.photo_1 || order.photo_2 || order.photo_3 || order.photo_4 || (order.photo && order.photo !== '-')) ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[order.photo_1, order.photo_2, order.photo_3, order.photo_4, order.photo]
                 .filter(Boolean)
                 .filter(img => img !== '-')
@@ -162,7 +151,7 @@ export default function PrintOrderPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-gray-200 text-center text-xs text-gray-400">
+        <div className="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
           <p>Generated by Neelkanth CRM on {new Date().toLocaleString()}</p>
           <p className="mt-1">This is a system generated order slip.</p>
         </div>
