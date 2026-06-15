@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Image as ImageIcon, Pencil } from "lucide-react";
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Image as ImageIcon, Pencil, Download } from "lucide-react";
 import Link from "next/link";
 import Select from "./Select";
 import ImageGalleryModal from "./ImageGalleryModal";
@@ -20,9 +20,10 @@ interface DataTableProps {
   searchPlaceholder?: string;
   editPath?: string;
   getRowClass?: (row: any) => string;
+  onDownload?: (row: any) => void;
 }
 
-export default function DataTable({ columns, data, title, searchPlaceholder = "Search records...", editPath, getRowClass }: DataTableProps) {
+export default function DataTable({ columns, data, title, searchPlaceholder = "Search records...", editPath, getRowClass, onDownload }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -108,15 +109,22 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                 {columns.map((col) => (
                   <td key={col.key} className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
                     {col.key === "action" ? (
-                      editPath ? (
-                        <Link href={`${editPath}/${row.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Edit">
-                          <Pencil className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        </Link>
-                      ) : (
-                        <button className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Edit">
-                          <Pencil className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        </button>
-                      )
+                      <div className="flex items-center gap-2">
+                        {editPath ? (
+                          <Link href={`${editPath}/${row.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Edit">
+                            <Pencil className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          </Link>
+                        ) : (
+                          <button className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Edit">
+                            <Pencil className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          </button>
+                        )}
+                        {onDownload && (
+                          <button onClick={() => onDownload(row)} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Download">
+                            <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          </button>
+                        )}
+                      </div>
                     ) : col.key === "photo" ? (
                       (() => {
                         // Extract all photo URLs from the row

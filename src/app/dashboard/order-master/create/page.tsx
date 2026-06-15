@@ -53,6 +53,10 @@ export default function CreateOrderPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
   const getDeliveryDays = () => {
     if (!formData.deliveryDate) return "0 Days";
     const delivery = new Date(formData.deliveryDate);
@@ -107,7 +111,7 @@ export default function CreateOrderPage() {
             <Select 
               name="customerId" 
               value={formData.customerId} 
-              onChange={handleChange as any} 
+              onChange={(v) => handleSelectChange("customerId", v)}
               placeholder="-- Select Customer --"
               searchable
               options={customers.map(c => ({ value: c.id, label: c.customerName }))} 
@@ -118,7 +122,7 @@ export default function CreateOrderPage() {
             <Select 
               name="productId" 
               value={formData.productId} 
-              onChange={handleChange as any} 
+              onChange={(v) => handleSelectChange("productId", v)}
               placeholder="-- Select Product --"
               searchable
               options={items.map(i => ({ value: i.id, label: i.itemName }))} 
@@ -129,7 +133,7 @@ export default function CreateOrderPage() {
             <Select 
               name="colorCode" 
               value={formData.colorCode} 
-              onChange={handleChange as any} 
+              onChange={(v) => handleSelectChange("colorCode", v)}
               options={[
                 { value: "Yellow", label: "Yellow" },
                 { value: "White", label: "White" },
@@ -144,7 +148,7 @@ export default function CreateOrderPage() {
             <Select 
               name="status" 
               value={formData.status} 
-              onChange={handleChange as any} 
+              onChange={(v) => handleSelectChange("status", v)}
               options={[
                 { value: "Order Confirmed", label: "Order Confirmed" },
                 { value: "Assigned Karigar", label: "Assigned Karigar" },

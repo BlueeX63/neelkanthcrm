@@ -3,16 +3,18 @@
 import DataTable from "@/components/ui/DataTable";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
-import { Plus, Filter, FileText, Home, Users, UserCog, Package, ShoppingCart, XCircle, CheckCircle, Truck, ClipboardList, SlidersHorizontal } from "lucide-react";
+import { Plus, Filter, FileText, Home, Users, UserCog, Package, ShoppingCart, XCircle, CheckCircle, Truck, ClipboardList, SlidersHorizontal, Download, FileSpreadsheet } from "lucide-react";
 import { useAppData } from "@/context/AppDataContext";
 import { useState } from "react";
 import Select from "@/components/ui/Select";
 import { motion, AnimatePresence } from "framer-motion";
+import { downloadCSV, downloadExcel } from "@/utils/exportUtils";
 
 const columns = [
   { key: "orderNo", label: "Order No", sortable: true },
   { key: "date", label: "Order Date", sortable: true },
   { key: "name", label: "Customer Name", sortable: true },
+  { key: "itemName", label: "Item Name", sortable: true },
   { key: "status", label: "Status", sortable: true },
   { key: "cad", label: "CAD", sortable: true },
   { key: "casting", label: "Casting", sortable: true },
@@ -24,7 +26,7 @@ const columns = [
 ];
 
 export default function OrderMasterPage() {
-  const { orders, customers } = useAppData();
+  const { orders, customers, items } = useAppData();
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState({ dateFrom: "", dateTo: "", customerName: "", status: "" });
   const [isFilterAnimating, setIsFilterAnimating] = useState(false);
@@ -35,7 +37,14 @@ export default function OrderMasterPage() {
       const customer = customers.find(c => c.id === order.customerId);
       finalName = customer?.customerName || "-";
     }
-    return { ...order, name: finalName };
+    
+    let finalItemName = order.itemName;
+    if ((!finalItemName || finalItemName === "-") && order.productId) {
+      const item = items.find(i => i.id === order.productId);
+      finalItemName = item?.itemName || "-";
+    }
+    
+    return { ...order, name: finalName, itemName: finalItemName };
   });
 
   const filteredOrders = enrichedOrders.filter(order => {
@@ -62,9 +71,42 @@ export default function OrderMasterPage() {
     return match;
   });
 
+  const handleExport = (format: 'csv' | 'excel') => {
+    const exportData = filteredOrders.map(order => ({
+      "Order No": order.orderNo || "-",
+      "Date": order.date || "-",
+      "Customer Name": order.name || "-",
+      "Item Name": order.itemName || "-",
+      "Color Code": order.colorCode || "-",
+      "Status": order.status || "-",
+      "Purity": order.purity || "-",
+      "Gross Wt": order.gWt || "-",
+      "Less Wt": order.lWt || "-",
+      "Net Wt": order.nWt || "-",
+      "Pieces": order.pcs || "-",
+      "Size": order.size || "-",
+      "Dimensions": (order.height && order.width) ? `${order.height} x ${order.width}` : "-",
+      "Description": order.orderDescription || "-"
+    }));
+    
+    if (format === 'csv') {
+      downloadCSV(exportData, `orders_${new Date().toISOString().split('T')[0]}.csv`);
+    } else {
+      downloadExcel(exportData, `orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-end items-end">
+      <div className="flex justify-end items-center gap-3">
+        <Button variant="outline" onClick={() => handleExport('excel')} className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200">
+          <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+          Export Excel
+        </Button>
+        <Button variant="outline" onClick={() => handleExport('csv')} className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200">
+          <Download className="w-4 h-4 mr-1.5" />
+          Export CSV
+        </Button>
         <Link href="/dashboard/order-master/create">
           <Button variant="primary">
             <Plus className="w-4 h-4" />
@@ -219,6 +261,9 @@ export default function OrderMasterPage() {
         data={filteredOrders} 
         searchPlaceholder="Search Orders..."
         editPath="/dashboard/order-master/edit"
+        onDownload={(row) => {
+          window.open(`/dashboard/order-master/print/${row.id}`, '_blank');
+        }}
         getRowClass={(row) => {
           if (row.colorCode === 'Yellow') return 'bg-yellow-50 hover:bg-yellow-100';
           if (row.colorCode === 'White') return 'bg-slate-50 hover:bg-slate-100';

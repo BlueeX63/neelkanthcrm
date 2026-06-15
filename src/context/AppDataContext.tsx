@@ -112,6 +112,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             orderNo: o.order_no,
             customerId: o.customer_id,
             colorCode: o.color_code,
+            productId: o.product_id,
+            deliveryDate: o.delivery_date,
+            orderDescription: o.order_description,
+            gWt: o.g_wt,
+            lWt: o.l_wt,
+            nWt: o.n_wt,
             action: "Edit"
           })));
         }
@@ -445,6 +451,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           orderNo: data.order_no,
           customerId: data.customer_id,
           colorCode: data.color_code,
+          productId: data.product_id,
+          deliveryDate: data.delivery_date,
+          orderDescription: data.order_description,
+          gWt: data.g_wt,
+          lWt: data.l_wt,
+          nWt: data.n_wt,
           action: "Edit"
         }, ...prev]);
       }
