@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useAppData } from "@/context/AppDataContext";
 
 export default function DashboardLayoutWrapper({ children }: { children: React.ReactNode }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { isLoading } = useAppData();
 
@@ -52,7 +52,7 @@ export default function DashboardLayoutWrapper({ children }: { children: React.R
         )}
       >
         <div className="bg-[#FAFAFA] h-full border-r border-gray-200 flex flex-col overflow-hidden w-full relative">
-          <Sidebar isCollapsed={isCollapsed} onNavigate={() => setIsMobileOpen(false)} />
+          <Sidebar isCollapsed={isCollapsed} onNavigate={() => { setIsMobileOpen(false); setIsCollapsed(true); }} />
         </div>
         
         {/* Desktop Collapse Button */}

@@ -60,7 +60,7 @@ export default function EditOrderPage() {
   if (!order) return <div className="p-6">Order not found</div>;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-4">
         <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 cursor-pointer">
           <ArrowLeft className="w-5 h-5" />
@@ -100,7 +100,7 @@ export default function EditOrderPage() {
               onChange={(v) => handleSelectChange("customerId", v)} 
               placeholder="-- Select Customer --"
               searchable
-              options={customers.map(c => ({ value: c.id, label: c.customerName }))} 
+              options={customers.map(c => ({ value: c.id, label: c.customerName, searchKeywords: c.mobileNo }))} 
             />
           </div>
           <div className="space-y-1.5">

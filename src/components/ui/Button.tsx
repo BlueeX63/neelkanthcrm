@@ -4,7 +4,7 @@ import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ButtonProps extends HTMLMotionProps<"button"> {
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "outline" | "solid";
 }
 
 export default function Button({
@@ -19,6 +19,7 @@ export default function Button({
     primary: "bg-black border border-black",
     secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
     outline: "border border-gray-200 text-gray-900 hover:border-black",
+    solid: "border-transparent",
   };
 
   return (
@@ -30,7 +31,8 @@ export default function Button({
     >
       <span className={cn(
         "relative z-10 flex items-center gap-2",
-        variant === "primary" ? "mix-blend-difference text-white" : ""
+        variant === "primary" ? "mix-blend-difference text-white" : "",
+        variant === "solid" ? "text-white" : ""
       )}>
         {children as React.ReactNode}
       </span>

@@ -7,6 +7,7 @@ import { ChevronDown, Check, Search } from "lucide-react";
 interface Option {
   value: string;
   label: string;
+  searchKeywords?: string;
 }
 
 interface SelectProps {
@@ -46,10 +47,12 @@ export default function Select({ options, value, onChange, name, placeholder = "
   }, [isOpen, searchable]);
 
   const selectedOption = options.find(opt => opt.value === value);
-  
-  const filteredOptions = options.filter(opt => 
-    opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = options.filter(opt => {
+    const term = searchQuery.toLowerCase();
+    const matchLabel = opt.label.toLowerCase().includes(term);
+    const matchKeywords = opt.searchKeywords?.toLowerCase().includes(term);
+    return matchLabel || matchKeywords;
+  });
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
@@ -100,11 +103,7 @@ export default function Select({ options, value, onChange, name, placeholder = "
                       key={option.value}
                       type="button"
                       onClick={() => {
-                        if (name) {
-                          onChange({ target: { name, value: option.value } } as any);
-                        } else {
-                          onChange(option.value as any);
-                        }
+                        onChange(option.value);
                         setIsOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${

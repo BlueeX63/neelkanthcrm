@@ -8,9 +8,15 @@ BEGIN
     new.email, 
     COALESCE(new.raw_user_meta_data->>'first_name', ''),
     COALESCE(new.raw_user_meta_data->>'last_name', ''),
-    COALESCE(new.raw_user_meta_data->>'user_type', 'ORDER DEPARTMENT'),
+    COALESCE(
+      CASE WHEN current_setting('role', true) = 'service_role' THEN new.raw_user_meta_data->>'user_type' ELSE NULL END, 
+      'ORDER DEPARTMENT'
+    ),
     COALESCE(new.raw_user_meta_data->>'first_name', '') || ' ' || COALESCE(new.raw_user_meta_data->>'last_name', ''),
-    COALESCE(new.raw_user_meta_data->>'user_type', 'ORDER DEPARTMENT'),
+    COALESCE(
+      CASE WHEN current_setting('role', true) = 'service_role' THEN new.raw_user_meta_data->>'user_type' ELSE NULL END, 
+      'ORDER DEPARTMENT'
+    ),
     'Active',
     '',
     'encrypted_in_auth' -- Password is saved securely in auth.users, so we just use a placeholder here

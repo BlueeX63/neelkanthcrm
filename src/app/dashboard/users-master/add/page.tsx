@@ -84,7 +84,7 @@ export default function AddUserPage() {
             <Select 
               name="userType" 
               value={formData.userType} 
-              onChange={handleChange as any} 
+              onChange={(v) => setFormData({ ...formData, userType: v })} 
               placeholder="Select Role"
               options={[
                 { value: "ORDER DEPARTMENT", label: "ORDER DEPARTMENT" },
@@ -97,7 +97,7 @@ export default function AddUserPage() {
             <Select 
               name="status" 
               value={formData.status} 
-              onChange={handleChange as any} 
+              onChange={(v) => setFormData({ ...formData, status: v })} 
               options={[
                 { value: "Active", label: "Active" },
                 { value: "Inactive", label: "Inactive" }

@@ -74,7 +74,7 @@ export default function EditItemPage() {
               <Select 
                 name="groupType" 
                 value={formData.groupType || ""} 
-                onChange={handleChange as any} 
+                onChange={(v) => setFormData({ ...formData, groupType: v })} 
                 className="flex-1"
                 placeholder="-- Select Group Type --"
                 options={[
@@ -97,7 +97,7 @@ export default function EditItemPage() {
             <Select 
               name="status" 
               value={formData.status || "Active"} 
-              onChange={handleChange as any} 
+              onChange={(v) => setFormData({ ...formData, status: v })} 
               options={[
                 { value: "Active", label: "Active" },
                 { value: "Inactive", label: "Inactive" }

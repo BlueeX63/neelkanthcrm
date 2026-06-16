@@ -57,7 +57,7 @@ export default function AddKarigarPage() {
             <Select 
               name="status" 
               value={formData.status} 
-              onChange={handleChange as any} 
+              onChange={(v) => setFormData({ ...formData, status: v })} 
               options={[
                 { value: "Active", label: "Active" },
                 { value: "Inactive", label: "Inactive" }

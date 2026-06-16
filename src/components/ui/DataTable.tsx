@@ -11,6 +11,7 @@ interface Column {
   key: string;
   label: string;
   sortable?: boolean;
+  render?: (row: any) => React.ReactNode;
 }
 
 interface DataTableProps {
@@ -21,9 +22,12 @@ interface DataTableProps {
   editPath?: string;
   getRowClass?: (row: any) => string;
   onDownload?: (row: any) => void;
+  selectable?: boolean;
+  selectedRows?: string[];
+  onSelectionChange?: (selectedIds: string[]) => void;
 }
 
-export default function DataTable({ columns, data, title, searchPlaceholder = "Search records...", editPath, getRowClass, onDownload }: DataTableProps) {
+export default function DataTable({ columns, data, title, searchPlaceholder = "Search records...", editPath, getRowClass, onDownload, selectable, selectedRows = [], onSelectionChange }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -63,7 +67,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
     >
       <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         {title && <h2 className="text-xl font-semibold text-gray-900 tracking-tight">{title}</h2>}
-        
+
         <div className="flex items-center gap-3 ml-auto">
           <div className="relative">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -82,6 +86,25 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
         <table className="w-full text-left border-collapse">
           <thead>
             <tr>
+              {selectable && (
+                <th className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 w-[40px]">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer"
+                    checked={paginatedData.length > 0 && paginatedData.every(row => selectedRows.includes(row.id))}
+                    onChange={(e) => {
+                      if (!onSelectionChange) return;
+                      if (e.target.checked) {
+                        const newSelected = new Set([...selectedRows, ...paginatedData.map(r => r.id)]);
+                        onSelectionChange(Array.from(newSelected));
+                      } else {
+                        const pageIds = paginatedData.map(r => r.id);
+                        onSelectionChange(selectedRows.filter(id => !pageIds.includes(id)));
+                      }
+                    }}
+                  />
+                </th>
+              )}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -106,9 +129,26 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                 key={row.id || i}
                 className={`transition-colors group cursor-default ${getRowClass ? getRowClass(row) : 'hover:bg-gray-50/50'}`}
               >
+                {selectable && (
+                  <td className="px-6 py-4 border-b border-gray-50" onClick={e => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer"
+                      checked={selectedRows.includes(row.id)}
+                      onChange={(e) => {
+                        if (!onSelectionChange) return;
+                        if (e.target.checked) {
+                          onSelectionChange([...selectedRows, row.id]);
+                        } else {
+                          onSelectionChange(selectedRows.filter(id => id !== row.id));
+                        }
+                      }}
+                    />
+                  </td>
+                )}
                 {columns.map((col) => (
-                  <td key={col.key} className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
-                    {col.key === "action" ? (
+                  <td key={col.key} className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap border-b border-gray-50">
+                    {col.render ? col.render(row) : col.key === "action" ? (
                       <div className="flex items-center gap-2">
                         {editPath ? (
                           <Link href={`${editPath}/${row.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Edit">
@@ -139,7 +179,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                         }
 
                         return (
-                          <div 
+                          <div
                             className="flex items-center -space-x-3 cursor-pointer group/photos"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -147,8 +187,8 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                             }}
                           >
                             {photos.slice(0, 3).map((p, i) => (
-                              <div 
-                                key={i} 
+                              <div
+                                key={i}
                                 className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-gray-100 relative shadow-sm transition-transform duration-300 group-hover/photos:scale-105"
                                 style={{ zIndex: 10 - i }}
                               >
@@ -164,13 +204,12 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                         );
                       })()
                     ) : col.key === "status" ? (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        row[col.key] === "Active" || row[col.key] === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" :
-                        row[col.key] === "Inactive" || row[col.key] === "Cancelled" ? "bg-rose-50 text-rose-700 border-rose-200/50" :
-                        row[col.key] === "Pending" || row[col.key] === "Order Confirmed" ? "bg-amber-50 text-amber-700 border-amber-200/50" :
-                        row[col.key] === "Assigned Karigar" || row[col.key] === "Received from Karigar" ? "bg-blue-50 text-blue-700 border-blue-200/50" :
-                        "bg-gray-50 text-gray-700 border-gray-200/50"
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${row[col.key] === "Active" || row[col.key] === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" :
+                          row[col.key] === "Inactive" || row[col.key] === "Cancelled" ? "bg-rose-50 text-rose-700 border-rose-200/50" :
+                            row[col.key] === "Pending" || row[col.key] === "Order Confirmed" ? "bg-amber-50 text-amber-700 border-amber-200/50" :
+                              row[col.key] === "Assigned Karigar" || row[col.key] === "Received from Karigar" ? "bg-blue-50 text-blue-700 border-blue-200/50" :
+                                "bg-gray-50 text-gray-700 border-gray-200/50"
+                        }`}>
                         {row[col.key]}
                       </span>
                     ) : (
@@ -178,7 +217,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                     )}
                   </td>
                 ))}
-                </motion.tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>
@@ -190,8 +229,8 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
             Showing {filteredData.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} entries
             {searchTerm && data.length !== filteredData.length ? ` (filtered from ${data.length} total)` : ""}
           </span>
-          <Select 
-            value={String(itemsPerPage)} 
+          <Select
+            value={String(itemsPerPage)}
             onChange={(val) => setItemsPerPage(Number(val))}
             options={[
               { value: "10", label: "10 per page" },
@@ -206,7 +245,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
 
         {filteredData.length > itemsPerPage && (
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -219,19 +258,18 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                   key={i}
                   disabled={page === "..."}
                   onClick={() => typeof page === 'number' && setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-medium transition-colors ${
-                    page === currentPage
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-medium transition-colors ${page === currentPage
                       ? "bg-black text-white shadow-sm"
-                      : page === "..." 
-                      ? "text-gray-400 cursor-default" 
-                      : "hover:bg-gray-100 text-gray-600"
-                  }`}
+                      : page === "..."
+                        ? "text-gray-400 cursor-default"
+                        : "hover:bg-gray-100 text-gray-600"
+                    }`}
                 >
                   {page}
                 </button>
               ))}
             </div>
-            <button 
+            <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -244,9 +282,9 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
 
       {/* Fullscreen Lightbox Modal */}
       {galleryImages && (
-        <ImageGalleryModal 
-          images={galleryImages} 
-          onClose={() => setGalleryImages(null)} 
+        <ImageGalleryModal
+          images={galleryImages}
+          onClose={() => setGalleryImages(null)}
         />
       )}
     </motion.div>

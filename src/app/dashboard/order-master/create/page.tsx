@@ -10,14 +10,30 @@ import { ArrowLeft } from "lucide-react";
 export default function CreateOrderPage() {
   const router = useRouter();
   const { addOrder, customers, items, orders } = useAppData();
-  
+
   const [currentDate, setCurrentDate] = useState("");
   const [currentTime, setCurrentTime] = useState("");
+  const [addedBy, setAddedBy] = useState("Loading...");
 
   useEffect(() => {
     const now = new Date();
     setCurrentDate(`${now.getDate().toString().padStart(2, '0')}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getFullYear()}`);
     setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toLowerCase());
+
+    const fetchUser = async () => {
+      const { createClient } = await import("@/utils/supabase/client");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const name = user.user_metadata?.first_name
+          ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
+          : user.email?.split('@')[0] || "Unknown User";
+        setAddedBy(name);
+      } else {
+        setAddedBy("Unknown User");
+      }
+    };
+    fetchUser();
   }, []);
 
   const orderNumber = (orders.length + 5221 + 1).toString().padStart(7, '0');
@@ -26,7 +42,7 @@ export default function CreateOrderPage() {
     deliveryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default 10 days from now
     customerId: "",
     productId: "",
-    colorCode: "Yellow",
+    colorCode: "",
     status: "Order Confirmed",
     gWt: "",
     lWt: "",
@@ -69,12 +85,12 @@ export default function CreateOrderPage() {
   };
 
   const handleSave = () => {
-    addOrder({ ...formData, files });
+    addOrder({ ...formData, addedBy, files });
     router.push("/dashboard/order-master");
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-5xl">
       <div className="flex items-center gap-4">
         <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 cursor-pointer">
           <ArrowLeft className="w-5 h-5" />
@@ -91,7 +107,7 @@ export default function CreateOrderPage() {
           <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Order Date:</span> <span className="text-gray-600">{currentDate}</span></div>
         </div>
         <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 space-y-2">
-          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add By:</span> <span className="text-gray-600">Super Admin</span></div>
+          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add By:</span> <span className="text-gray-600">{addedBy}</span></div>
           <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add Time:</span> <span className="text-gray-600">{currentTime}</span></div>
         </div>
         <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 space-y-2">
@@ -108,54 +124,40 @@ export default function CreateOrderPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">Select Customer <span className="text-red-500">*</span></label>
-            <Select 
-              name="customerId" 
-              value={formData.customerId} 
+            <Select
+              name="customerId"
+              value={formData.customerId}
               onChange={(v) => handleSelectChange("customerId", v)}
               placeholder="-- Select Customer --"
               searchable
-              options={customers.map(c => ({ value: c.id, label: c.customerName }))} 
+              options={customers.map(c => ({ value: c.id, label: c.customerName, searchKeywords: c.mobileNo }))}
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">Select Product <span className="text-red-500">*</span></label>
-            <Select 
-              name="productId" 
-              value={formData.productId} 
+            <Select
+              name="productId"
+              value={formData.productId}
               onChange={(v) => handleSelectChange("productId", v)}
               placeholder="-- Select Product --"
               searchable
-              options={items.map(i => ({ value: i.id, label: i.itemName }))} 
+              options={items.map(i => ({ value: i.id, label: i.itemName }))}
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-gray-700">Select Color Code <span className="text-red-500">*</span></label>
-            <Select 
-              name="colorCode" 
-              value={formData.colorCode} 
+            <Select
+              name="colorCode"
+              value={formData.colorCode}
               onChange={(v) => handleSelectChange("colorCode", v)}
+              placeholder="-- Select Color --"
               options={[
                 { value: "Yellow", label: "Yellow" },
                 { value: "White", label: "White" },
                 { value: "Rose", label: "Rose" },
                 { value: "Platinum", label: "Platinum" },
                 { value: "Dual Tone", label: "Dual Tone" }
-              ]} 
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700">Status <span className="text-red-500">*</span></label>
-            <Select 
-              name="status" 
-              value={formData.status} 
-              onChange={(v) => handleSelectChange("status", v)}
-              options={[
-                { value: "Order Confirmed", label: "Order Confirmed" },
-                { value: "Assigned Karigar", label: "Assigned Karigar" },
-                { value: "Received from Karigar", label: "Received from Karigar" },
-                { value: "Delivered", label: "Delivered" },
-                { value: "Cancelled", label: "Cancelled" }
-              ]} 
+              ]}
             />
           </div>
         </div>
@@ -192,11 +194,11 @@ export default function CreateOrderPage() {
           {[0, 1, 2, 3].map(index => (
             <div key={index} className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Upload Image {index + 1}</label>
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="image/*"
                 onChange={(e) => handleFileChange(index, e)}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 border border-gray-300 rounded-sm cursor-pointer" 
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 border border-gray-300 rounded-sm cursor-pointer"
               />
             </div>
           ))}

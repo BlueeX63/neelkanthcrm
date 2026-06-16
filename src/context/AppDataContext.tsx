@@ -2,6 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  addCustomerAction, updateCustomerAction, deleteCustomerAction,
+  addKarigarAction, updateKarigarAction, deleteKarigarAction,
+  addItemAction, updateItemAction, deleteItemAction,
+  updateUserAction, deleteUserAction,
+  addOrderAction, updateOrderAction, deleteOrderAction,
+  addHistoryAction, updateHistoryAction, closePreviousAssignedHistoryAction, getHistoryAction, getOrdersAction
+} from '@/app/actions/dbActions';
 
 export interface AppDataContextType {
   customers: any[];
@@ -53,13 +61,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           { data: usersData },
           { data: karigarsData },
           { data: itemsData },
-          { data: ordersData }
+          ordersData
         ] = await Promise.all([
           supabase.from("customers").select("*").order("created_at", { ascending: false }),
           supabase.from("users").select("*").order("created_at", { ascending: false }),
           supabase.from("karigars").select("*").order("created_at", { ascending: false }),
           supabase.from("items").select("*").order("created_at", { ascending: false }),
-          supabase.from("orders").select("*").order("created_at", { ascending: false })
+          getOrdersAction()
         ]);
 
         if (customersData) {
@@ -105,10 +113,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             action: "Edit"
           })));
         }
-
         if (ordersData) {
           setOrders(ordersData.map(o => ({
             ...o,
+            history: o.order_karigar_history || [],
             orderNo: o.order_no,
             customerId: o.customer_id,
             colorCode: o.color_code,
@@ -118,6 +126,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             gWt: o.g_wt,
             lWt: o.l_wt,
             nWt: o.n_wt,
+            pcs: o.pcs,
+            processName: o.process_name,
+            assignedKarigarId: o.assigned_karigar_id,
+            assignedDate: o.assigned_date,
+            receivingDate: o.receiving_date,
+            deliveredDate: o.delivered_date,
+            karigarDeliveredDate: o.karigar_delivered_date,
+            cancelReason: o.cancel_reason,
+            cancelDate: o.cancel_date,
+            addedBy: o.added_by,
             action: "Edit"
           })));
         }
@@ -144,8 +162,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         gst_no: customer.gstNo,
         status: customer.status,
       };
-      const { data, error } = await supabase.from("customers").insert(dbCustomer).select().single();
-      if (error) throw error;
+      const data = await addCustomerAction(dbCustomer);
       if (data) {
         setCustomers(prev => [{
           ...data,
@@ -172,8 +189,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.gstNo !== undefined) dbData.gst_no = data.gstNo;
       if (data.status !== undefined) dbData.status = data.status;
       
-      const { error } = await supabase.from("customers").update(dbData).eq("id", id);
-      if (error) throw error;
+      await updateCustomerAction(id, dbData);
       setCustomers(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
     } catch (error) { console.error("Error updating customer:", error); }
     finally { setIsLoading(false); }
@@ -182,8 +198,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const deleteCustomer = async (id: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.from("customers").delete().eq("id", id);
-      if (error) throw error;
+      await deleteCustomerAction(id);
       setCustomers(prev => prev.filter(c => c.id !== id));
     } catch (error) { console.error("Error deleting customer:", error); }
     finally { setIsLoading(false); }
@@ -238,8 +253,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.name !== undefined) dbData.name = data.name;
       if (data.role !== undefined) dbData.role = data.role;
       
-      const { error } = await supabase.from("users").update(dbData).eq("id", id);
-      if (error) throw error;
+      await updateUserAction(id, dbData);
       setUsers(prev => prev.map(u => u.id === id ? { ...u, ...data } : u));
     } catch (error) { console.error("Error updating user:", error); }
     finally { setIsLoading(false); }
@@ -248,8 +262,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const deleteUser = async (id: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.from("users").delete().eq("id", id);
-      if (error) throw error;
+      await deleteUserAction(id);
       setUsers(prev => prev.filter(u => u.id !== id));
     } catch (error) { console.error("Error deleting user:", error); }
     finally { setIsLoading(false); }
@@ -265,8 +278,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         mobile_no: karigar.mobileNo,
         status: karigar.status
       };
-      const { data, error } = await supabase.from("karigars").insert(dbKarigar).select().single();
-      if (error) throw error;
+      const data = await addKarigarAction(dbKarigar);
       if (data) {
         setKarigars(prev => [{
           ...data,
@@ -289,8 +301,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.mobileNo !== undefined) dbData.mobile_no = data.mobileNo;
       if (data.status !== undefined) dbData.status = data.status;
 
-      const { error } = await supabase.from("karigars").update(dbData).eq("id", id);
-      if (error) throw error;
+      await updateKarigarAction(id, dbData);
       setKarigars(prev => prev.map(k => k.id === id ? { ...k, ...data } : k));
     } catch (error) { console.error("Error updating karigar:", error); }
     finally { setIsLoading(false); }
@@ -299,8 +310,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const deleteKarigar = async (id: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.from("karigars").delete().eq("id", id);
-      if (error) throw error;
+      await deleteKarigarAction(id);
       setKarigars(prev => prev.filter(k => k.id !== id));
     } catch (error) { console.error("Error deleting karigar:", error); }
     finally { setIsLoading(false); }
@@ -326,8 +336,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         added_by: addedBy,
         date: new Date().toLocaleDateString("en-GB").replace(/\//g, "-")
       };
-      const { data, error } = await supabase.from("items").insert(dbItem).select().single();
-      if (error) throw error;
+      const data = await addItemAction(dbItem);
       if (data) {
         setItems(prev => [{
           ...data,
@@ -354,8 +363,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.touch !== undefined) dbData.touch = data.touch;
       if (data.status !== undefined) dbData.status = data.status;
 
-      const { error } = await supabase.from("items").update(dbData).eq("id", id);
-      if (error) throw error;
+      await updateItemAction(id, dbData);
       setItems(prev => prev.map(i => i.id === id ? { ...i, ...data } : i));
     } catch (error) { console.error("Error updating item:", error); }
     finally { setIsLoading(false); }
@@ -364,8 +372,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const deleteItem = async (id: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.from("items").delete().eq("id", id);
-      if (error) throw error;
+      await deleteItemAction(id);
       setItems(prev => prev.filter(i => i.id !== id));
     } catch (error) { console.error("Error deleting item:", error); }
     finally { setIsLoading(false); }
@@ -441,10 +448,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         photo_2: photoUrls[1] || null,
         photo_3: photoUrls[2] || null,
         photo_4: photoUrls[3] || null,
+        process_name: order.processName || null,
+        assigned_karigar_id: order.assignedKarigarId || null,
+        assigned_date: order.assignedDate || null,
+        receiving_date: order.receivingDate || null,
+        delivered_date: order.deliveredDate || null,
+        added_by: order.addedBy || null,
       };
 
-      const { data, error } = await supabase.from("orders").insert(dbOrder).select().single();
-      if (error) throw error;
+      const data = await addOrderAction(dbOrder);
       if (data) {
         setOrders(prev => [{
           ...data,
@@ -457,6 +469,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           gWt: data.g_wt,
           lWt: data.l_wt,
           nWt: data.n_wt,
+          processName: data.process_name,
+          assignedKarigarId: data.assigned_karigar_id,
+          assignedDate: data.assigned_date,
+          receivingDate: data.receiving_date,
+          deliveredDate: data.delivered_date,
+          addedBy: data.added_by,
           action: "Edit"
         }, ...prev]);
       }
@@ -481,21 +499,100 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.polish !== undefined) dbData.polish = data.polish;
       
       // New mapping logic for updated order schema
-      if (data.deliveryDate !== undefined) dbData.delivery_date = data.deliveryDate;
+      if (data.deliveryDate !== undefined) dbData.delivery_date = data.deliveryDate || null;
       if (data.productId !== undefined) dbData.product_id = data.productId;
       if (data.gWt !== undefined) dbData.g_wt = data.gWt;
       if (data.lWt !== undefined) dbData.l_wt = data.lWt;
       if (data.nWt !== undefined) dbData.n_wt = data.nWt;
-      if (data.purity !== undefined) dbData.purity = data.purity;
       if (data.pcs !== undefined) dbData.pcs = data.pcs;
       if (data.size !== undefined) dbData.size = data.size;
       if (data.height !== undefined) dbData.height = data.height;
       if (data.width !== undefined) dbData.width = data.width;
+      if (data.purity !== undefined) dbData.purity = data.purity;
       if (data.orderDescription !== undefined) dbData.order_description = data.orderDescription;
+      if (data.orderImage !== undefined) dbData.order_image = data.orderImage;
+      if (data.photo_1 !== undefined) dbData.photo_1 = data.photo_1;
+      if (data.photo_2 !== undefined) dbData.photo_2 = data.photo_2;
+      if (data.photo_3 !== undefined) dbData.photo_3 = data.photo_3;
+      if (data.photo_4 !== undefined) dbData.photo_4 = data.photo_4;
+      if (data.date !== undefined) dbData.date = data.date || null;
+      if (data.processName !== undefined) dbData.process_name = data.processName;
+      if (data.assignedKarigarId !== undefined) dbData.assigned_karigar_id = data.assignedKarigarId || null;
+      if (data.assignedDate !== undefined) dbData.assigned_date = data.assignedDate || null;
+      if (data.receivingDate !== undefined) dbData.receiving_date = data.receivingDate || null;
+      if (data.deliveredDate !== undefined) dbData.delivered_date = data.deliveredDate || null;
+      if (data.karigarDeliveredDate !== undefined) dbData.karigar_delivered_date = data.karigarDeliveredDate || null;
+      if (data.cancelReason !== undefined) dbData.cancel_reason = data.cancelReason || null;
+      if (data.cancelDate !== undefined) dbData.cancel_date = data.cancelDate || null;
+      if (data.addedBy !== undefined) dbData.added_by = data.addedBy || null;
 
-      const { error } = await supabase.from("orders").update(dbData).eq("id", id);
-      if (error) throw error;
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...data } : o));
+      try {
+        await updateOrderAction(id, dbData);
+      } catch (error: any) {
+        alert("Failed to update order in database: " + error.message);
+        throw error;
+      }
+
+      if (data.status === 'Assigned Karigar') {
+        const order = orders.find(o => o.id === id);
+        
+        // If order was already assigned, close the previous history record
+        if (order?.status === 'Assigned Karigar') {
+          try {
+            await closePreviousAssignedHistoryAction(id, data.assignedDate || new Date().toISOString().split('T')[0]);
+          } catch (updateHistoryError) {
+            console.error("Error updating history on reassignment:", updateHistoryError);
+          }
+        }
+
+        try {
+          await addHistoryAction({
+            order_id: id,
+            karigar_id: data.assignedKarigarId || order?.assignedKarigarId || null,
+            process_name: data.processName || order?.processName || null,
+            action_type: 'Assigned',
+            action_date: data.assignedDate || new Date().toISOString().split('T')[0],
+            expected_date: data.receivingDate || order?.receivingDate || null
+          });
+        } catch (insertHistoryError: any) {
+          console.error("Error inserting assignment history:", insertHistoryError.message);
+        }
+
+      } else if (data.status === 'Received from Karigar') {
+        const order = orders.find(o => o.id === id);
+        try {
+          const updatedCount = await closePreviousAssignedHistoryAction(id, data.karigarDeliveredDate || new Date().toISOString().split('T')[0]);
+          
+          if (updatedCount === 0) {
+            // Fallback if closing previous history didn't exist
+            try {
+              await addHistoryAction({
+                order_id: id,
+                karigar_id: order?.assignedKarigarId || null,
+                process_name: order?.processName || null,
+                action_type: 'Received',
+                action_date: order?.assignedDate || new Date().toISOString().split('T')[0],
+                received_date: data.karigarDeliveredDate || new Date().toISOString().split('T')[0],
+                expected_date: order?.receivingDate || null
+              });
+            } catch (insertReceiveError) {
+              console.error("Error inserting fallback receive history:", insertReceiveError);
+            }
+          }
+        } catch (updateReceiveError) {
+          console.error("Error updating receive history:", updateReceiveError);
+        }
+      }
+
+      let updatedHistory: any[] | undefined = undefined;
+      try {
+        const histData = await getHistoryAction(id);
+        if (histData) updatedHistory = histData;
+      } catch (err) {
+        console.error("Error fetching updated history", err);
+      }
+
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...data, ...(updatedHistory ? { history: updatedHistory } : {}) } : o));
     } catch (error) { console.error("Error updating order:", error); }
     finally { setIsLoading(false); }
   };
@@ -503,8 +600,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const deleteOrder = async (id: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.from("orders").delete().eq("id", id);
-      if (error) throw error;
+      await deleteOrderAction(id);
       setOrders(prev => prev.filter(o => o.id !== id));
     } catch (error) { console.error("Error deleting order:", error); }
     finally { setIsLoading(false); }

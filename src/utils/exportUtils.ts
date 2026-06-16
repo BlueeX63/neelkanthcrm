@@ -1,13 +1,26 @@
-import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 
-export const downloadExcel = (data: any[], filename: string) => {
-  if (!data || !data.length) {
-    return;
-  }
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-  XLSX.writeFile(workbook, filename);
+export const downloadExcel = async (data: any[], filename: string) => {
+  if (!data || !data.length) return;
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Sheet1');
+  
+  const headers = Object.keys(data[0]);
+  worksheet.columns = headers.map(header => ({ header, key: header }));
+  
+  data.forEach(row => {
+    worksheet.addRow(row);
+  });
+  
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  if (!filename.endsWith('.xlsx')) filename += '.xlsx';
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 export const downloadCSV = (data: any[], filename: string) => {
