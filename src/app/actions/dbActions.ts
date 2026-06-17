@@ -114,21 +114,21 @@ export async function deleteUserAction(id: string) {
 
 const orderSchema = z.object({
   order_no: z.string().min(1),
-  date: z.string().optional(),
-  photo: z.string().optional(),
-  name: z.string().optional(),
-  status: z.string().optional(),
-  cad: z.string().optional(),
-  casting: z.string().optional(),
-  filling: z.string().optional(),
-  stone: z.string().optional(),
-  polish: z.string().optional(),
-  customer_id: z.string().optional(),
-  color_code: z.string().optional(),
+  date: z.string().optional().nullable(),
+  photo: z.string().optional().nullable(),
+  name: z.string().optional().nullable(),
+  status: z.string().optional().nullable(),
+  cad: z.string().optional().nullable(),
+  casting: z.string().optional().nullable(),
+  filling: z.string().optional().nullable(),
+  stone: z.string().optional().nullable(),
+  polish: z.string().optional().nullable(),
+  customer_id: z.string().optional().nullable(),
+  color_code: z.string().optional().nullable(),
   karigar_delivered_date: z.string().optional().nullable(),
   cancel_reason: z.string().optional().nullable(),
   cancel_date: z.string().optional().nullable(),
-  added_by: z.string().optional(),
+  added_by: z.string().optional().nullable(),
 }).passthrough();
 
 export async function addOrderAction(data: any) {
@@ -208,6 +208,53 @@ export async function closePreviousAssignedHistoryAction(orderId: string, receiv
     return openHistories.length;
   }
   return 0;
+}
+
+export async function revertHistoryToAssignedAction(orderId: string) {
+  const supabase = await createClient();
+  const { data: latestHistories, error: selectError } = await supabase
+    .from("order_karigar_history")
+    .select("id")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (selectError) throw new Error(selectError.message);
+
+  if (latestHistories && latestHistories.length > 0) {
+    const { error: updateError } = await supabase
+      .from("order_karigar_history")
+      .update({
+        action_type: 'Assigned',
+        received_date: null
+      })
+      .eq("id", latestHistories[0].id);
+    if (updateError) throw new Error(updateError.message);
+    return true;
+  }
+  return false;
+}
+
+export async function deleteLatestHistoryAction(orderId: string) {
+  const supabase = await createClient();
+  const { data: latestHistories, error: selectError } = await supabase
+    .from("order_karigar_history")
+    .select("id")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (selectError) throw new Error(selectError.message);
+
+  if (latestHistories && latestHistories.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("order_karigar_history")
+      .delete()
+      .eq("id", latestHistories[0].id);
+    if (deleteError) throw new Error(deleteError.message);
+    return true;
+  }
+  return false;
 }
 
 // Storage Action

@@ -8,7 +8,8 @@ import {
   addItemAction, updateItemAction, deleteItemAction,
   updateUserAction, deleteUserAction,
   addOrderAction, updateOrderAction, deleteOrderAction,
-  addHistoryAction, updateHistoryAction, closePreviousAssignedHistoryAction, getHistoryAction, getOrdersAction
+  addHistoryAction, updateHistoryAction, closePreviousAssignedHistoryAction, getHistoryAction, getOrdersAction,
+  revertHistoryToAssignedAction, deleteLatestHistoryAction
 } from '@/app/actions/dbActions';
 
 export interface AppDataContextType {
@@ -485,6 +486,30 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const updateOrder = async (id: string, data: any) => {
     try {
       setIsLoading(true);
+      const order = orders.find(o => o.id === id);
+      const statusOrder = ['Order Confirmed', 'Assigned Karigar', 'Received from Karigar', 'Delivered'];
+      const oldStatusIdx = order ? statusOrder.indexOf(order.status) : -1;
+      const newStatusIdx = data.status ? statusOrder.indexOf(data.status) : -1;
+      const isRollback = oldStatusIdx !== -1 && newStatusIdx !== -1 && newStatusIdx < oldStatusIdx;
+      
+      if (isRollback) {
+        if (oldStatusIdx === 3) { // Rollback from Delivered
+          data.deliveredDate = null;
+        }
+        if (oldStatusIdx >= 2 && newStatusIdx < 2) { // Rollback from Received to Assigned or Confirmed
+          data.karigarDeliveredDate = null;
+          if (newStatusIdx === 1) {
+            try { await revertHistoryToAssignedAction(id); } catch (e) { console.error("Error reverting history:", e); }
+          }
+        }
+        if (oldStatusIdx >= 1 && newStatusIdx < 1) { // Rollback from Assigned to Confirmed
+          data.assignedKarigarId = null;
+          data.assignedDate = null;
+          data.receivingDate = null;
+          try { await deleteLatestHistoryAction(id); } catch (e) { console.error("Error deleting history:", e); }
+        }
+      }
+
       const dbData: any = {};
       if (data.orderNo !== undefined) dbData.order_no = data.orderNo;
       if (data.customerId !== undefined) dbData.customer_id = data.customerId;
@@ -533,32 +558,31 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      if (data.status === 'Assigned Karigar') {
-        const order = orders.find(o => o.id === id);
-        
-        // If order was already assigned, close the previous history record
-        if (order?.status === 'Assigned Karigar') {
-          try {
-            await closePreviousAssignedHistoryAction(id, data.assignedDate || new Date().toISOString().split('T')[0]);
-          } catch (updateHistoryError) {
-            console.error("Error updating history on reassignment:", updateHistoryError);
+      if (!isRollback) {
+        if (data.status === 'Assigned Karigar') {
+          // If order was already assigned, close the previous history record
+          if (order?.status === 'Assigned Karigar') {
+            try {
+              await closePreviousAssignedHistoryAction(id, data.assignedDate || new Date().toISOString().split('T')[0]);
+            } catch (updateHistoryError) {
+              console.error("Error updating history on reassignment:", updateHistoryError);
+            }
           }
-        }
 
-        try {
-          await addHistoryAction({
-            order_id: id,
-            karigar_id: data.assignedKarigarId || order?.assignedKarigarId || null,
-            process_name: data.processName || order?.processName || null,
-            action_type: 'Assigned',
-            action_date: data.assignedDate || new Date().toISOString().split('T')[0],
-            expected_date: data.receivingDate || order?.receivingDate || null
-          });
-        } catch (insertHistoryError: any) {
-          console.error("Error inserting assignment history:", insertHistoryError.message);
-        }
+          try {
+            await addHistoryAction({
+              order_id: id,
+              karigar_id: data.assignedKarigarId || order?.assignedKarigarId || null,
+              process_name: data.processName || order?.processName || null,
+              action_type: 'Assigned',
+              action_date: data.assignedDate || new Date().toISOString().split('T')[0],
+              expected_date: data.receivingDate || order?.receivingDate || null
+            });
+          } catch (insertHistoryError: any) {
+            console.error("Error inserting assignment history:", insertHistoryError.message);
+          }
 
-      } else if (data.status === 'Received from Karigar') {
+        } else if (data.status === 'Received from Karigar') {
         const order = orders.find(o => o.id === id);
         try {
           const updatedCount = await closePreviousAssignedHistoryAction(id, data.karigarDeliveredDate || new Date().toISOString().split('T')[0]);
@@ -583,8 +607,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           console.error("Error updating receive history:", updateReceiveError);
         }
       }
+    }
 
-      let updatedHistory: any[] | undefined = undefined;
+    let updatedHistory: any[] | undefined = undefined;
       try {
         const histData = await getHistoryAction(id);
         if (histData) updatedHistory = histData;
