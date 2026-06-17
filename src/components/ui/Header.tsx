@@ -10,6 +10,9 @@ interface HeaderProps {
 export default function Header({ onMenuToggle }: HeaderProps) {
   const pathname = usePathname();
   
+  const today = new Date();
+  const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+
   // Basic title formatting from pathname
   const title = pathname === "/dashboard" 
     ? "Dashboard" 
@@ -32,20 +35,14 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           </h1>
           <div className="text-[10px] sm:text-xs text-gray-400 mt-1 flex flex-wrap items-center gap-2">
             <span className="hidden sm:inline">Welcome To Neelkanth ↗</span>
-            <span className="bg-brand-500/10 text-brand-600 px-2 py-0.5 rounded-md font-medium whitespace-nowrap">
-              Current Logged in Date: 14-06-2026
+            <span suppressHydrationWarning className="bg-brand-500/10 text-brand-600 px-2 py-0.5 rounded-md font-medium whitespace-nowrap">
+              Current Logged in Date: {formattedDate}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 self-start md:self-auto pl-11 md:pl-0">
-        <div className="flex items-center gap-2 bg-white px-3 sm:px-4 py-1.5 rounded-full shadow-sm border border-gray-100 whitespace-nowrap">
-          <span className="text-xs sm:text-sm font-medium text-gray-600 hidden md:inline">AMC REMAINING DAYS :</span>
-          <span className="text-xs sm:text-sm font-medium text-gray-600 md:hidden">AMC:</span>
-          <span className="text-xs sm:text-sm font-bold text-gray-900">61</span>
-        </div>
-      </div>
+
     </header>
   );
 }
