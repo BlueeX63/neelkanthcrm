@@ -87,7 +87,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
           <thead>
             <tr>
               {selectable && (
-                <th className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 w-[40px]">
+                <th className="px-1 py-1.5 border-b border-gray-100 bg-gray-50/50 w-[30px]">
                   <input
                     type="checkbox"
                     className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer"
@@ -108,7 +108,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                  className="px-1 py-1.5 border-b border-gray-100 bg-gray-50/50 text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-normal break-words leading-tight"
                 >
                   <div className="flex items-center gap-2 cursor-pointer group hover:text-gray-900 transition-colors">
                     {col.label}
@@ -130,7 +130,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                 className={`transition-colors group cursor-default ${getRowClass ? getRowClass(row) : 'hover:bg-gray-50/50'}`}
               >
                 {selectable && (
-                  <td className="px-6 py-4 border-b border-gray-50" onClick={e => e.stopPropagation()}>
+                  <td className="px-1 py-1.5 border-b border-gray-50" onClick={e => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer"
@@ -147,7 +147,7 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                   </td>
                 )}
                 {columns.map((col) => (
-                  <td key={col.key} className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap border-b border-gray-50">
+                  <td key={col.key} className="px-1 py-1.5 text-[10px] text-gray-700 whitespace-normal break-words border-b border-gray-50 leading-tight">
                     {col.render ? col.render(row) : col.key === "action" ? (
                       <div className="flex items-center gap-2">
                         {editPath ? (
@@ -204,13 +204,13 @@ export default function DataTable({ columns, data, title, searchPlaceholder = "S
                         );
                       })()
                     ) : col.key === "status" ? (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${row[col.key] === "Active" || row[col.key] === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" :
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${row[col.key] === "Active" || row[col.key] === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200/50" :
                           row[col.key] === "Inactive" || row[col.key] === "Cancelled" ? "bg-rose-50 text-rose-700 border-rose-200/50" :
                             row[col.key] === "Pending" || row[col.key] === "Order Confirmed" ? "bg-amber-50 text-amber-700 border-amber-200/50" :
                               row[col.key] === "Assigned Karigar" || row[col.key] === "Received from Karigar" ? "bg-blue-50 text-blue-700 border-blue-200/50" :
                                 "bg-gray-50 text-gray-700 border-gray-200/50"
                         }`}>
-                        {row[col.key]}
+                        {typeof row[col.key] === 'string' ? row[col.key].replace("from Karigar", "").replace("Karigar", "").trim() : row[col.key]}
                       </span>
                     ) : (
                       row[col.key]

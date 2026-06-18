@@ -13,7 +13,7 @@ export default function Button({
   children,
   ...props
 }: ButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium transition-all rounded-sm relative overflow-hidden group cursor-pointer";
+  const baseStyles = "inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-medium transition-all rounded-sm relative overflow-hidden group cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none";
   
   const variants = {
     primary: "bg-black border border-black",

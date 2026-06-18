@@ -3,9 +3,9 @@
 import DataTable from "@/components/ui/DataTable";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
-import { Plus, Filter, FileText, Home, Users, UserCog, Package, ShoppingCart, XCircle, CheckCircle, Truck, ClipboardList, SlidersHorizontal, Download, FileSpreadsheet, Pencil } from "lucide-react";
+import { Plus, Filter, FileText, Home, Users, UserCog, Package, ShoppingCart, XCircle, CheckCircle, Truck, ClipboardList, SlidersHorizontal, Download, FileSpreadsheet, Pencil, Printer } from "lucide-react";
 import { useAppData } from "@/context/AppDataContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Select from "@/components/ui/Select";
 import { motion, AnimatePresence } from "framer-motion";
 import { downloadCSV, downloadExcel } from "@/utils/exportUtils";
@@ -23,6 +23,16 @@ export default function OrderMasterPage() {
     status: "",
     process: ""
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get('status');
+      if (statusParam) {
+        setFilters(f => ({ ...f, status: statusParam }));
+      }
+    }
+  }, []);
   const [isFilterAnimating, setIsFilterAnimating] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
@@ -85,6 +95,7 @@ export default function OrderMasterPage() {
       touch,
       differenceDays,
       cad: getProcessDates('CAD', order.cad),
+      designing: getProcessDates('Designing', order.designing),
       casting: getProcessDates('Casting', order.casting),
       filling: getProcessDates('Filing', order.filling),
       stone: getProcessDates('Stone Setting', order.stone),
@@ -98,8 +109,11 @@ export default function OrderMasterPage() {
          <Link href={`/dashboard/order-master/edit/${row.id}`} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Edit">
            <Pencil className="w-4 h-4 group-hover:scale-110 transition-transform" />
          </Link>
-         <button onClick={() => window.open(`/dashboard/order-master/print/${row.id}`, '_blank')} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Invoice PDF">
-           <FileText className="w-4 h-4 group-hover:scale-110 transition-transform" />
+         <button onClick={() => window.open(`/dashboard/order-master/print/${row.id}`, '_blank')} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Print Invoice">
+           <Printer className="w-4 h-4 group-hover:scale-110 transition-transform" />
+         </button>
+         <button onClick={() => window.open(`/dashboard/order-master/print/${row.id}`, '_blank')} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Download PDF">
+           <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
          </button>
          {(filters.status === "Assigned Karigar" || filters.status === "Received from Karigar" || filters.status === "Delivered") && (
            <button onClick={() => setModalState({ type: 'history', orderId: row.id })} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Karigar History">
@@ -116,14 +130,14 @@ export default function OrderMasterPage() {
       case "Order Confirmed":
         return [
           { key: "orderNo", label: "Order No", sortable: true },
-          { key: "date", label: "Order Date", sortable: true },
-          { key: "name", label: "Customer Name", sortable: true },
-          { key: "deliveryDate", label: "Customer Delivery Date", sortable: true },
-          { key: "itemName", label: "Product Name", sortable: true },
-          { key: "pcs", label: "Pieces", sortable: true },
+          { key: "date", label: "Date", sortable: true },
+          { key: "name", label: "Customer", sortable: true },
+          { key: "deliveryDate", label: "Delivery Date", sortable: true },
+          { key: "itemName", label: "Product", sortable: true },
+          { key: "pcs", label: "Pcs", sortable: true },
           { key: "gWt", label: "GWT", sortable: true },
           { key: "touch", label: "Touch", sortable: true },
-          { key: "addedBy", label: "Order Add By", sortable: true },
+          { key: "addedBy", label: "Added By", sortable: true },
           photoColumn,
           { key: "status", label: "Status", sortable: true },
           actionColumn
@@ -131,15 +145,15 @@ export default function OrderMasterPage() {
       case "Assigned Karigar":
         return [
           { key: "orderNo", label: "Order No", sortable: true },
-          { key: "date", label: "Order Date", sortable: true },
-          { key: "name", label: "Customer Name", sortable: true },
+          { key: "date", label: "Date", sortable: true },
+          { key: "name", label: "Customer", sortable: true },
           { key: "processName", label: "Process", sortable: true },
-          { key: "karigarName", label: "Karigar Name", sortable: true },
-          { key: "assignedDate", label: "Karigar Assign Date", sortable: true },
-          { key: "receivingDate", label: "Karigar Receiving Date", sortable: true },
-          { key: "itemName", label: "Product Name", sortable: true },
+          { key: "karigarName", label: "Karigar", sortable: true },
+          { key: "assignedDate", label: "Assign Date", sortable: true },
+          { key: "receivingDate", label: "Est. Rcv Date", sortable: true },
+          { key: "itemName", label: "Product", sortable: true },
           { key: "gWt", label: "GWT", sortable: true },
-          { key: "addedBy", label: "Order Add By", sortable: true },
+          { key: "addedBy", label: "Added By", sortable: true },
           photoColumn,
           { key: "status", label: "Status", sortable: true },
           actionColumn
@@ -147,17 +161,17 @@ export default function OrderMasterPage() {
       case "Received from Karigar":
         return [
           { key: "orderNo", label: "Order No", sortable: true },
-          { key: "date", label: "Order Date", sortable: true },
-          { key: "name", label: "Customer Name", sortable: true },
+          { key: "date", label: "Date", sortable: true },
+          { key: "name", label: "Customer", sortable: true },
           { key: "processName", label: "Process", sortable: true },
-          { key: "karigarName", label: "Karigar Name", sortable: true },
-          { key: "assignedDate", label: "Karigar Assign Date", sortable: true },
-          { key: "receivingDate", label: "Karigar Receiving Date", sortable: true },
-          { key: "karigarDeliveredDate", label: "Karigar Received Date", sortable: true },
-          { key: "differenceDays", label: "Total Different Days", sortable: true },
-          { key: "itemName", label: "Product Name", sortable: true },
+          { key: "karigarName", label: "Karigar", sortable: true },
+          { key: "assignedDate", label: "Assign Date", sortable: true },
+          { key: "receivingDate", label: "Est. Rcv Date", sortable: true },
+          { key: "karigarDeliveredDate", label: "Actual Rcv Date", sortable: true },
+          { key: "differenceDays", label: "Diff Days", sortable: true },
+          { key: "itemName", label: "Product", sortable: true },
           { key: "gWt", label: "GWT", sortable: true },
-          { key: "addedBy", label: "Order Add By", sortable: true },
+          { key: "addedBy", label: "Added By", sortable: true },
           photoColumn,
           { key: "status", label: "Status", sortable: true },
           actionColumn
@@ -165,13 +179,13 @@ export default function OrderMasterPage() {
       case "Delivered":
         return [
           { key: "orderNo", label: "Order No", sortable: true },
-          { key: "date", label: "Order Date", sortable: true },
-          { key: "name", label: "Customer Name", sortable: true },
-          { key: "deliveryDate", label: "Customer Delivery Date", sortable: true },
-          { key: "deliveredDate", label: "Customer Delivered Date", sortable: true },
-          { key: "itemName", label: "Product Name", sortable: true },
+          { key: "date", label: "Date", sortable: true },
+          { key: "name", label: "Customer", sortable: true },
+          { key: "deliveryDate", label: "Delivery Date", sortable: true },
+          { key: "deliveredDate", label: "Delivered Date", sortable: true },
+          { key: "itemName", label: "Product", sortable: true },
           { key: "gWt", label: "GWT", sortable: true },
-          { key: "addedBy", label: "Order Add By", sortable: true },
+          { key: "addedBy", label: "Added By", sortable: true },
           photoColumn,
           { key: "status", label: "Status", sortable: true },
           actionColumn
@@ -179,20 +193,21 @@ export default function OrderMasterPage() {
       case "Cancelled":
         return [
           { key: "orderNo", label: "Order No", sortable: true },
-          { key: "date", label: "Order Date", sortable: true },
-          { key: "name", label: "Customer Name", sortable: true },
+          { key: "date", label: "Date", sortable: true },
+          { key: "name", label: "Customer", sortable: true },
           { key: "cancelReason", label: "Cancel Reason", sortable: true },
           { key: "cancelDate", label: "Cancel Date", sortable: true },
-          { key: "addedBy", label: "Order Add By", sortable: true },
+          { key: "addedBy", label: "Added By", sortable: true },
           actionColumn
         ];
       default:
         return [
           { key: "orderNo", label: "Order No", sortable: true },
-          { key: "date", label: "Order Date", sortable: true },
-          { key: "name", label: "Customer Name", sortable: true },
+          { key: "date", label: "Date", sortable: true },
+          { key: "name", label: "Customer", sortable: true },
           { key: "status", label: "Status", sortable: true },
           { key: "cad", label: "CAD", sortable: true },
+          { key: "designing", label: "Designing", sortable: true },
           { key: "casting", label: "Casting", sortable: true },
           { key: "filling", label: "Filling", sortable: true },
           { key: "stone", label: "Stone", sortable: true },
@@ -309,6 +324,7 @@ export default function OrderMasterPage() {
     const processes = [
       { name: "GHAT", color: "text-blue-500" },
       { name: "CAD", color: "text-purple-500" },
+      { name: "Designing", color: "text-emerald-500" },
       { name: "Casting", color: "text-orange-500" },
       { name: "Filling", color: "text-red-500" },
       { name: "Stone Setting", color: "text-teal-500" },
@@ -398,7 +414,7 @@ export default function OrderMasterPage() {
       </div>
 
       {/* Row 2 Process Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="flex flex-wrap lg:flex-nowrap gap-2 w-full">
         {getDynamicProcessStats().map((stat, i) => (
           <div 
             key={i} 
@@ -406,13 +422,13 @@ export default function OrderMasterPage() {
               setFilters({ ...filters, process: filters.process === stat.title ? "" : stat.title });
               setSelectedOrders([]);
             }}
-            className={`bg-white border ${filters.process === stat.title ? 'border-[#6A4FE0] ring-1 ring-[#6A4FE0]' : 'border-gray-200'} rounded-md p-4 flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
+            className={`flex-1 min-w-[120px] bg-white border ${filters.process === stat.title ? 'border-[#6A4FE0] ring-1 ring-[#6A4FE0]' : 'border-gray-200'} rounded-md p-2 flex items-start gap-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
           >
             <FileText className={`w-5 h-5 shrink-0 mt-1 ${stat.color || 'text-gray-400'}`} />
             <div className="flex-1 min-w-0">
               <div className="text-lg font-bold text-gray-900">{stat.count}</div>
               <div className="text-xs font-semibold text-gray-600 uppercase mt-0.5 truncate">{stat.title}</div>
-              <div className="text-[10px] text-gray-500 mt-1 truncate">
+              <div className="text-[9px] lg:text-[10px] text-gray-500 mt-1 truncate">
                 PCS: {stat.pcs} | Gross Wt: {stat.wt}
               </div>
             </div>
@@ -497,21 +513,21 @@ export default function OrderMasterPage() {
       <div className="flex justify-end gap-2 mb-4">
         {filters.status === "Order Confirmed" && (
           <>
-            <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} className="text-sm h-10 px-4 bg-slate-900 hover:bg-slate-800">Assign to Karigar</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-900 hover:bg-slate-800">Assign to Karigar</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
           </>
         )}
         {filters.status === "Assigned Karigar" && (
           <>
-            <Button variant="solid" onClick={() => setModalState({ type: 'receive' })} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Receive from Karigar</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} className="text-sm h-10 px-4 bg-slate-700 hover:bg-slate-800">ReAssign Orders</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'receive' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Receive from Karigar</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-700 hover:bg-slate-800">ReAssign Orders</Button>
           </>
         )}
         {filters.status === "Received from Karigar" && (
           <>
-            <Button variant="solid" onClick={() => setModalState({ type: 'deliver' })} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Deliver to Customer</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'deliver' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Deliver to Customer</Button>
+            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
           </>
         )}
       </div>

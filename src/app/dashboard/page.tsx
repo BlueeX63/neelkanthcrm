@@ -6,6 +6,7 @@ import { Users, UserPlus, HardHat, Package, ShoppingCart, CheckCircle2, UserCog,
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useAppData } from "@/context/AppDataContext";
 import ApexChart from "@/components/ui/ApexChart";
+import Link from "next/link";
 
 
 
@@ -137,11 +138,21 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <StatCard title="Order Confirm" value={orderConfirmedCount} icon={CheckCircle2} delay={0.35} layout="horizontal" />
-        <StatCard title="Assign Karigar" value={assignedCount} icon={UserCog} delay={0.4} layout="horizontal" />
-        <StatCard title="Receive Karigar" value={receivedCount} icon={UserCheck} delay={0.45} layout="horizontal" />
-        <StatCard title="Deliver Customer" value={deliveredCount} icon={Truck} delay={0.5} layout="horizontal" />
-        <StatCard title="Cancel Order" value={cancelledCount} icon={XCircle} delay={0.55} layout="horizontal" />
+        <Link href="/dashboard/order-master?status=Order%20Confirmed">
+          <StatCard title="Order Confirm" value={orderConfirmedCount} icon={CheckCircle2} delay={0.35} layout="horizontal" className="h-full cursor-pointer" />
+        </Link>
+        <Link href="/dashboard/order-master?status=Assigned%20Karigar">
+          <StatCard title="Assign Karigar" value={assignedCount} icon={UserCog} delay={0.4} layout="horizontal" className="h-full cursor-pointer" />
+        </Link>
+        <Link href="/dashboard/order-master?status=Received%20from%20Karigar">
+          <StatCard title="Receive Karigar" value={receivedCount} icon={UserCheck} delay={0.45} layout="horizontal" className="h-full cursor-pointer" />
+        </Link>
+        <Link href="/dashboard/order-master?status=Delivered">
+          <StatCard title="Deliver Customer" value={deliveredCount} icon={Truck} delay={0.5} layout="horizontal" className="h-full cursor-pointer" />
+        </Link>
+        <Link href="/dashboard/order-master?status=Cancelled">
+          <StatCard title="Cancel Order" value={cancelledCount} icon={XCircle} delay={0.55} layout="horizontal" className="h-full cursor-pointer" />
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">

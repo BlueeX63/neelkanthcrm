@@ -57,6 +57,7 @@ export function AssignKarigarModal({ isOpen, onClose, onSubmit, selectedOrders, 
               options={[
                 {value: "GHAT", label: "GHAT"},
                 {value: "CAD", label: "CAD"},
+                {value: "Designing", label: "Designing"},
                 {value: "Casting", label: "Casting"},
                 {value: "Filling", label: "Filling"},
                 {value: "Stone Setting", label: "Stone Setting"},
