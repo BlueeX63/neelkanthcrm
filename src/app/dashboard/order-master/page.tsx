@@ -112,9 +112,6 @@ export default function OrderMasterPage() {
          <button onClick={() => window.open(`/dashboard/order-master/print/${row.id}`, '_blank')} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Print Invoice">
            <Printer className="w-4 h-4 group-hover:scale-110 transition-transform" />
          </button>
-         <button onClick={() => window.open(`/dashboard/order-master/print/${row.id}`, '_blank')} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Download PDF">
-           <Download className="w-4 h-4 group-hover:scale-110 transition-transform" />
-         </button>
          {(filters.status === "Assigned Karigar" || filters.status === "Received from Karigar" || filters.status === "Delivered") && (
            <button onClick={() => setModalState({ type: 'history', orderId: row.id })} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Karigar History">
              <ClipboardList className="w-4 h-4 group-hover:scale-110 transition-transform" />

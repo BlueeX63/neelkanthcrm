@@ -156,8 +156,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
-        <ChartCard 
-          title="Orders Per Day" 
+        <ChartCard
+          title="Orders Per Day"
           subtitle="Showing daily order volume and gross weight"
           className="lg:col-span-2"
           delay={0.6}
@@ -167,8 +167,8 @@ export default function DashboardPage() {
           </div>
         </ChartCard>
 
-        <ChartCard 
-          title="Orders by Status" 
+        <ChartCard
+          title="Orders by Status"
           subtitle="Distribution of current orders"
           delay={0.7}
         >
@@ -189,14 +189,14 @@ export default function DashboardPage() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <RechartsTooltip 
+                <RechartsTooltip
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   itemStyle={{ color: '#1f2937', fontWeight: 500 }}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          
+
           <div className="absolute bottom-0 w-full flex justify-center gap-6 pb-2">
             {pieData.map((entry, index) => (
               <div key={index} className="flex items-center gap-2">
