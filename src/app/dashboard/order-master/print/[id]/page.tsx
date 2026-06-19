@@ -164,13 +164,13 @@ export default function PrintOrderPage() {
           
           {(order.photo_1 || order.photo_2 || order.photo_3 || order.photo_4 || (order.photo && order.photo !== '-')) ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[order.photo_1, order.photo_2, order.photo_3, order.photo_4, order.photo]
+              {[...new Set([order.photo_1, order.photo_2, order.photo_3, order.photo_4, order.photo])]
                 .filter(Boolean)
                 .filter(img => img !== '-')
                 .slice(0, 4)
                 .map((img, i) => (
                   <div key={i} className="border border-gray-200 p-2 rounded-md bg-gray-50 flex items-center justify-center aspect-square">
-                    <img src={img} alt={`Reference ${i+1}`} className="max-w-full max-h-full object-contain mix-blend-multiply rounded" />
+                    <img src={img as string} alt={`Reference ${i+1}`} className="max-w-full max-h-full object-contain mix-blend-multiply rounded" />
                   </div>
               ))}
             </div>
