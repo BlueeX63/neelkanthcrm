@@ -63,13 +63,14 @@ export default function PrintOrderPage() {
         }
 
         @media print {
+          html, body { height: auto !important; min-height: auto !important; }
           .no-print { display: none !important; }
           .print-only { display: block !important; }
           .page-break { page-break-before: always; }
         }
       `}} />
 
-      <div className="max-w-4xl mx-auto bg-white min-h-screen p-8 text-gray-900 font-sans shadow-sm border border-gray-100 rounded-md print:shadow-none print:border-none print:p-0">
+      <div className="max-w-4xl mx-auto bg-white min-h-screen p-8 text-gray-900 font-sans shadow-sm border border-gray-100 rounded-md print:min-h-0 print:shadow-none print:border-none print:p-0">
         
         {/* Print Controls (Hidden during print) */}
         <div className="flex justify-between items-center mb-8 no-print border-b border-gray-100 pb-4">
