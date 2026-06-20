@@ -9,20 +9,18 @@ export default function PrintOrderPage() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
-  const { orders, customers, items, isLoading } = useAppData();
+  const { orders, items, isLoading } = useAppData();
   
   const order = orders.find(o => o.id === id);
 
   useEffect(() => {
     const handleAfterPrint = () => {
-      window.close();
+      // window.close(); // You may want to keep or remove this depending on behavior
     };
     window.addEventListener('afterprint', handleAfterPrint);
 
     let timer: NodeJS.Timeout;
-    // Only trigger print when data is fully loaded and we have an order or know it's missing
     if (!isLoading) {
-      // Automatically trigger print dialog after a short delay to allow images and fonts to render
       timer = setTimeout(() => {
         window.print();
       }, 500);
@@ -34,16 +32,19 @@ export default function PrintOrderPage() {
     };
   }, [id, isLoading]);
 
-  if (isLoading) return <div className="p-6">Loading order details...</div>;
-  if (!order) return <div className="p-6">Order not found</div>;
+  if (isLoading) return <div className="p-6 font-sans">Loading order details...</div>;
+  if (!order) return <div className="p-6 font-sans">Order not found</div>;
 
-  const customer = customers.find(c => c.id === order.customerId);
-  
   let finalItemName = order.itemName;
   if ((!finalItemName || finalItemName === "-") && order.productId) {
     const product = items.find(i => i.id === order.productId);
     finalItemName = product?.itemName || "-";
   }
+
+  const images = [order.photo_1, order.photo_2, order.photo_3, order.photo_4, order.photo]
+    .filter(Boolean)
+    .filter(img => img !== '-');
+  const uniqueImages = [...new Set(images)];
 
   return (
     <>
@@ -54,141 +55,148 @@ export default function PrintOrderPage() {
         main { 
           padding-left: 0 !important; 
           margin: 0 !important; 
-          background: white !important;
+          background: #e5e7eb !important; /* Gray background on screen for contrast */
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          padding-top: 20px !important;
         }
         body { 
-          background: white !important; 
+          background: #e5e7eb !important; 
           margin: 0; 
           padding: 0;
         }
 
+        @page {
+          size: A5 portrait;
+          margin: 5mm;
+        }
+
         @media print {
-          html, body { height: auto !important; min-height: auto !important; }
+          html, body { 
+            background: white !important; 
+            height: 100% !important; 
+          }
+          main {
+            background: white !important;
+            padding-top: 0 !important;
+            display: block;
+          }
           .no-print { display: none !important; }
-          .print-only { display: block !important; }
-          .page-break { page-break-before: always; }
+          .print-container {
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+          }
         }
       `}} />
 
-      <div className="max-w-4xl mx-auto bg-white min-h-screen p-8 text-gray-900 font-sans shadow-sm border border-gray-100 rounded-md print:min-h-0 print:shadow-none print:border-none print:p-0">
-        
+      <div className="flex flex-col gap-4">
         {/* Print Controls (Hidden during print) */}
-        <div className="flex justify-between items-center mb-8 no-print border-b border-gray-100 pb-4">
+        <div className="flex justify-between items-center no-print bg-white p-4 rounded-md shadow-sm w-[148mm]">
           <button onClick={() => router.back()} className="flex items-center text-sm text-gray-600 hover:text-black transition-colors font-medium">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Orders
+            Back
           </button>
           <button onClick={() => window.print()} className="flex items-center text-sm bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors font-medium">
             <Printer className="w-4 h-4 mr-2" />
-            Print Order
+            Print A5
           </button>
         </div>
 
-        {/* Invoice Header */}
-        <div className="mb-6 border-b-2 border-black pb-4">
-          <h1 className="text-2xl font-black tracking-tight uppercase">Order Slip - Neelkanth CRM</h1>
-        </div>
-
-        {/* Order Details Grid */}
-        <div className="mb-6">
-          <table className="w-full text-sm border-collapse border border-gray-300">
-            <tbody>
-              <tr>
-                <th className="bg-gray-100 p-2 border border-gray-300 w-[15%] text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Order No</th>
-                <td className="p-2 border border-gray-300 w-[35%] font-medium text-gray-900">{order.orderNo || '-'}</td>
-                <th className="bg-gray-100 p-2 border border-gray-300 w-[15%] text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Date</th>
-                <td className="p-2 border border-gray-300 w-[35%] font-medium text-gray-900">{order.date || new Date().toLocaleDateString()}</td>
-              </tr>
-              <tr>
-                <th className="bg-gray-100 p-2 border border-gray-300 text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Customer</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{customer?.customerName || order.name || 'Walk-in'}</td>
-                <th className="bg-gray-100 p-2 border border-gray-300 text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Item</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{finalItemName === "-" ? 'Custom' : finalItemName}</td>
-              </tr>
-              <tr>
-                <th className="bg-gray-100 p-2 border border-gray-300 text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Status</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.status || '-'}</td>
-                <th className="bg-gray-100 p-2 border border-gray-300 text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Delivery</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.deliveryDate || '-'}</td>
-              </tr>
-              <tr>
-                <th className="bg-gray-100 p-2 border border-gray-300 text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Color</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.colorCode || '-'}</td>
-                <th className="bg-gray-100 p-2 border border-gray-300 text-left font-semibold text-gray-700 uppercase tracking-wide text-xs">Purity</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.purity || '-'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Weights & Dimensions Table */}
-        <div className="mb-6">
-          <table className="w-full text-sm border-collapse border border-gray-300 text-center">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border border-gray-300 font-semibold text-gray-700 uppercase tracking-wide text-xs">G.Wt</th>
-                <th className="p-2 border border-gray-300 font-semibold text-gray-700 uppercase tracking-wide text-xs">L.Wt</th>
-                <th className="p-2 border border-gray-300 font-semibold text-gray-700 uppercase tracking-wide text-xs">N.Wt</th>
-                <th className="p-2 border border-gray-300 font-semibold text-gray-700 uppercase tracking-wide text-xs">Size</th>
-                <th className="p-2 border border-gray-300 font-semibold text-gray-700 uppercase tracking-wide text-xs">Pcs</th>
-                <th className="p-2 border border-gray-300 font-semibold text-gray-700 uppercase tracking-wide text-xs">Dimensions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.gWt || '-'}</td>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.lWt || '-'}</td>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.nWt || '-'}</td>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.size || '-'}</td>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.pcs || '-'}</td>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900">{order.height && order.width ? `${order.height}x${order.width}` : '-'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Notes Section */}
-        <div className="mb-8">
-          <table className="w-full text-sm border-collapse border border-gray-300">
-            <tbody>
-              <tr>
-                <th className="bg-gray-100 p-2 border border-gray-300 w-[15%] text-left font-semibold text-gray-700 align-top uppercase tracking-wide text-xs">Notes</th>
-                <td className="p-2 border border-gray-300 font-medium text-gray-900 min-h-[60px] whitespace-pre-wrap">{order.orderDescription || '-'}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Photos */}
-        <div className="mb-8">
-          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-200 pb-2">Reference Images</h2>
-          
-          {(order.photo_1 || order.photo_2 || order.photo_3 || order.photo_4 || (order.photo && order.photo !== '-')) ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...new Set([order.photo_1, order.photo_2, order.photo_3, order.photo_4, order.photo])]
-                .filter(Boolean)
-                .filter(img => img !== '-')
-                .slice(0, 4)
-                .map((img, i) => (
-                  <div key={i} className="border border-gray-200 p-2 rounded-md bg-gray-50 flex items-center justify-center aspect-square">
-                    <img src={img as string} alt={`Reference ${i+1}`} className="max-w-full max-h-full object-contain mix-blend-multiply rounded" />
-                  </div>
-              ))}
+        {/* A5 Print Canvas */}
+        <div className="print-container w-[148mm] min-h-[210mm] bg-white text-black font-sans box-border p-2 shadow-lg">
+          <div className="border-[1.5px] border-black h-full flex flex-col print:h-[calc(100vh-10mm)]">
+            
+            {/* Header */}
+            <div className="text-center pt-4 pb-2 flex-shrink-0">
+              <div className="flex justify-center mb-1">
+                <img src="/logo.png" alt="Neelkanth Logo" className="h-12 object-contain" />
+              </div>
+              <h1 className="text-xl font-bold tracking-widest mb-1 mt-2">NEELKANTH</h1>
+              <div className="border-t-[1.5px] border-b-[1.5px] border-black py-1 mt-1">
+                <h2 className="text-base font-bold">Sales Order</h2>
+              </div>
             </div>
-          ) : (
-            <div className="p-8 border border-dashed border-gray-300 bg-gray-50 rounded-md flex items-center justify-center text-center">
-              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">No images uploaded</p>
+
+            {/* Table */}
+            <table className="w-full border-collapse flex-shrink-0 mt-0">
+              <tbody>
+                <tr>
+                  <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Order No.</span><span>: {order.orderNo || '-'}</span></div>
+                  </td>
+                  <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Delivery Date</span><span>: {order.deliveryDate || '-'}</span></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Order Date</span><span>: {order.date || '-'}</span></div>
+                  </td>
+                  <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-28 font-bold shrink-0">PCS</span><span>: {order.pcs || '-'}</span></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Design No.</span><span>: {finalItemName || '-'}</span></div>
+                  </td>
+                  <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Size</span><span>: {order.size || '-'}</span></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Touch</span><span>: {order.purity || '-'}</span></div>
+                  </td>
+                  <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Color</span><span>: {order.colorCode || '-'}</span></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-24 font-bold shrink-0">G.Weight</span><span>: {order.gWt || '-'}</span></div>
+                  </td>
+                  <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan={2} className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px]">
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Narration</span><span className="whitespace-pre-wrap flex-1">: {order.orderDescription || '-'}</span></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Image & Notes Area */}
+            <div className="flex flex-1 min-h-[250px] relative">
+              <div className={`w-1/2 border-r-[1.5px] border-black p-2 grid gap-2 ${uniqueImages.length > 2 ? 'grid-cols-2' : 'grid-cols-1'} auto-rows-fr`}>
+                {uniqueImages.length > 0 ? (
+                  uniqueImages.map((img, i) => (
+                    <div key={i} className="flex items-center justify-center h-full w-full relative">
+                      <img src={img as string} alt={`Reference ${i}`} className="max-w-full max-h-full object-contain absolute inset-0 m-auto" />
+                    </div>
+                  ))
+                ) : null}
+              </div>
+              <div className="w-1/2 p-2">
+                {/* Empty space for handwritten notes */}
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="mt-8 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">
-          <p>Generated by Neelkanth CRM on {new Date().toLocaleString()}</p>
-          <p className="mt-1">This is a system generated order slip.</p>
+            {/* Footer */}
+            <div className="text-center text-[10px] text-gray-500 py-1.5 border-t-[1.5px] border-black flex-shrink-0 italic">
+              (This is a computer-generated sales order; no signature is required.)
+            </div>
+          </div>
         </div>
-
       </div>
     </>
   );
 }
+
