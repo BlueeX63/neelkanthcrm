@@ -9,7 +9,7 @@ export default function PrintOrderPage() {
   const params = useParams();
   const id = params?.id as string;
   const router = useRouter();
-  const { orders, items, isLoading } = useAppData();
+  const { orders, items, customers, isLoading } = useAppData();
 
   const order = orders.find(o => o.id === id);
 
@@ -44,6 +44,14 @@ export default function PrintOrderPage() {
     }
     if ((!finalItemTouch || finalItemTouch === "-") && product) {
       finalItemTouch = product.touch || "-";
+    }
+  }
+
+  let customerName = "-";
+  if (order.customerId) {
+    const customer = customers.find(c => c.id === order.customerId);
+    if (customer) {
+      customerName = customer.customerName || "-";
     }
   }
 
@@ -138,7 +146,7 @@ export default function PrintOrderPage() {
                     <div className="flex"><span className="w-24 font-bold shrink-0">Order No.</span><span>: {order.orderNo || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-28 font-bold shrink-0">Delivery Date</span><span>: {order.deliveryDate || '-'}</span></div>
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Customer Name</span><span>: {customerName}</span></div>
                   </td>
                 </tr>
                 <tr>
@@ -146,7 +154,7 @@ export default function PrintOrderPage() {
                     <div className="flex"><span className="w-24 font-bold shrink-0">Order Date</span><span>: {order.date || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-28 font-bold shrink-0">PCS</span><span>: {order.pcs || '-'}</span></div>
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Delivery Date</span><span>: {order.deliveryDate || '-'}</span></div>
                   </td>
                 </tr>
                 <tr>
@@ -154,7 +162,7 @@ export default function PrintOrderPage() {
                     <div className="flex"><span className="w-24 font-bold shrink-0">Design No.</span><span>: {finalItemName || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-28 font-bold shrink-0">Size</span><span>: {order.size || '-'}</span></div>
+                    <div className="flex"><span className="w-28 font-bold shrink-0">PCS</span><span>: {order.pcs || '-'}</span></div>
                   </td>
                 </tr>
                 <tr>
@@ -162,7 +170,7 @@ export default function PrintOrderPage() {
                     <div className="flex"><span className="w-24 font-bold shrink-0">Touch</span><span>: {finalItemTouch || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-28 font-bold shrink-0">Color</span><span>: {order.colorCode || '-'}</span></div>
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Size</span><span>: {order.size || '-'}</span></div>
                   </td>
                 </tr>
                 <tr>
@@ -170,26 +178,31 @@ export default function PrintOrderPage() {
                     <div className="flex"><span className="w-24 font-bold shrink-0">G.Weight</span><span>: {order.gWt || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
+                    <div className="flex"><span className="w-28 font-bold shrink-0">Color</span><span>: {order.colorCode || '-'}</span></div>
                   </td>
                 </tr>
                 <tr>
                   <td colSpan={2} className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px]">
-                    <div className="flex"><span className="w-24 font-bold shrink-0">Narration</span><span className="whitespace-pre-wrap flex-1">: {order.orderDescription || '-'}</span></div>
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Narration</span><span className="whitespace-pre-wrap break-all flex-1">: {order.orderDescription || '-'}</span></div>
                   </td>
                 </tr>
               </tbody>
             </table>
 
             {/* Image Area */}
-            <div className="flex flex-1 min-h-[250px] relative">
-              <div className="w-1/2 border-r-[1.5px] border-black p-2 flex items-center justify-center relative">
+            <div className="flex flex-1 min-h-[250px]">
+              <div className="w-1/2 border-r-[1.5px] border-black p-1.5 relative">
                 {uniqueImages[0] ? (
-                  <img src={uniqueImages[0] as string} alt="Reference 1" className="max-w-full max-h-full object-contain absolute inset-0 m-auto" />
+                  <div className="relative w-full h-full overflow-hidden">
+                    <img src={uniqueImages[0] as string} alt="Reference 1" className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
                 ) : null}
               </div>
-              <div className="w-1/2 p-2 flex items-center justify-center relative">
+              <div className="w-1/2 p-1.5 relative">
                 {uniqueImages[1] ? (
-                  <img src={uniqueImages[1] as string} alt="Reference 2" className="max-w-full max-h-full object-contain absolute inset-0 m-auto" />
+                  <div className="relative w-full h-full overflow-hidden">
+                    <img src={uniqueImages[1] as string} alt="Reference 2" className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
                 ) : null}
               </div>
             </div>
