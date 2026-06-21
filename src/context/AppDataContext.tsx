@@ -511,6 +511,33 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         }
       }
 
+      // Upload new images if any
+      const photoUrls: (string | undefined)[] = [undefined, undefined, undefined, undefined];
+      if (data.files && data.files.length > 0) {
+        for (let i = 0; i < data.files.length; i++) {
+          const file = data.files[i];
+          if (file) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `orders/${fileName}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('order-images')
+              .upload(filePath, file);
+
+            if (!uploadError) {
+              const { data: publicUrlData } = supabase.storage
+                .from('order-images')
+                .getPublicUrl(filePath);
+              photoUrls[i] = publicUrlData.publicUrl;
+            } else {
+              console.error("Upload error:", uploadError);
+              alert(`Image upload failed: ${uploadError.message}. Please check your Supabase Storage policies.`);
+            }
+          }
+        }
+      }
+
       const dbData: any = {};
       if (data.orderNo !== undefined) dbData.order_no = data.orderNo;
       if (data.customerId !== undefined) dbData.customer_id = data.customerId;
@@ -542,6 +569,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.photo_2 !== undefined) dbData.photo_2 = data.photo_2;
       if (data.photo_3 !== undefined) dbData.photo_3 = data.photo_3;
       if (data.photo_4 !== undefined) dbData.photo_4 = data.photo_4;
+
+      if (photoUrls[0] !== undefined) { dbData.photo_1 = photoUrls[0]; data.photo_1 = photoUrls[0]; if (photoUrls[0]) { dbData.photo = photoUrls[0]; data.photo = photoUrls[0]; } }
+      if (photoUrls[1] !== undefined) { dbData.photo_2 = photoUrls[1]; data.photo_2 = photoUrls[1]; }
+      if (photoUrls[2] !== undefined) { dbData.photo_3 = photoUrls[2]; data.photo_3 = photoUrls[2]; }
+      if (photoUrls[3] !== undefined) { dbData.photo_4 = photoUrls[3]; data.photo_4 = photoUrls[3]; }
       if (data.date !== undefined) dbData.date = data.date || null;
       if (data.processName !== undefined) dbData.process_name = data.processName;
       if (data.assignedKarigarId !== undefined) dbData.assigned_karigar_id = data.assignedKarigarId || null;

@@ -10,7 +10,7 @@ export default function PrintOrderPage() {
   const id = params?.id as string;
   const router = useRouter();
   const { orders, items, isLoading } = useAppData();
-  
+
   const order = orders.find(o => o.id === id);
 
   useEffect(() => {
@@ -36,9 +36,15 @@ export default function PrintOrderPage() {
   if (!order) return <div className="p-6 font-sans">Order not found</div>;
 
   let finalItemName = order.itemName;
-  if ((!finalItemName || finalItemName === "-") && order.productId) {
+  let finalItemTouch = order.purity;
+  if (order.productId) {
     const product = items.find(i => i.id === order.productId);
-    finalItemName = product?.itemName || "-";
+    if ((!finalItemName || finalItemName === "-") && product) {
+      finalItemName = product.itemName || "-";
+    }
+    if ((!finalItemTouch || finalItemTouch === "-") && product) {
+      finalItemTouch = product.touch || "-";
+    }
   }
 
   const images = [order.photo_1, order.photo_2, order.photo_3, order.photo_4, order.photo]
@@ -48,7 +54,8 @@ export default function PrintOrderPage() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         /* Hide sidebar, header, and global wrappers entirely on this page */
         nav, header, aside, .fixed, .hidden.md\\:flex { display: none !important; }
         
@@ -111,7 +118,7 @@ export default function PrintOrderPage() {
         {/* A5 Print Canvas */}
         <div className="print-container w-[148mm] min-h-[210mm] bg-white text-black font-sans box-border p-2 shadow-lg">
           <div className="border-[1.5px] border-black h-full flex flex-col print:h-[calc(100vh-10mm)]">
-            
+
             {/* Header */}
             <div className="text-center pt-4 pb-2 flex-shrink-0">
               <div className="flex justify-center mb-1">
@@ -152,7 +159,7 @@ export default function PrintOrderPage() {
                 </tr>
                 <tr>
                   <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-24 font-bold shrink-0">Touch</span><span>: {order.purity || '-'}</span></div>
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Touch</span><span>: {finalItemTouch || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
                     <div className="flex"><span className="w-28 font-bold shrink-0">Color</span><span>: {order.colorCode || '-'}</span></div>
@@ -173,19 +180,17 @@ export default function PrintOrderPage() {
               </tbody>
             </table>
 
-            {/* Image & Notes Area */}
+            {/* Image Area */}
             <div className="flex flex-1 min-h-[250px] relative">
-              <div className={`w-1/2 border-r-[1.5px] border-black p-2 grid gap-2 ${uniqueImages.length > 2 ? 'grid-cols-2' : 'grid-cols-1'} auto-rows-fr`}>
-                {uniqueImages.length > 0 ? (
-                  uniqueImages.map((img, i) => (
-                    <div key={i} className="flex items-center justify-center h-full w-full relative">
-                      <img src={img as string} alt={`Reference ${i}`} className="max-w-full max-h-full object-contain absolute inset-0 m-auto" />
-                    </div>
-                  ))
+              <div className="w-1/2 border-r-[1.5px] border-black p-2 flex items-center justify-center relative">
+                {uniqueImages[0] ? (
+                  <img src={uniqueImages[0] as string} alt="Reference 1" className="max-w-full max-h-full object-contain absolute inset-0 m-auto" />
                 ) : null}
               </div>
-              <div className="w-1/2 p-2">
-                {/* Empty space for handwritten notes */}
+              <div className="w-1/2 p-2 flex items-center justify-center relative">
+                {uniqueImages[1] ? (
+                  <img src={uniqueImages[1] as string} alt="Reference 2" className="max-w-full max-h-full object-contain absolute inset-0 m-auto" />
+                ) : null}
               </div>
             </div>
 

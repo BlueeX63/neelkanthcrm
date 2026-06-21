@@ -133,7 +133,7 @@ export default function OrderMasterPage() {
           { key: "itemName", label: "Product", sortable: true },
           { key: "pcs", label: "Pcs", sortable: true },
           { key: "gWt", label: "GWT", sortable: true },
-          { key: "touch", label: "Touch", sortable: true },
+          { key: "purity", label: "Touch", sortable: true },
           { key: "addedBy", label: "Added By", sortable: true },
           photoColumn,
           { key: "status", label: "Status", sortable: true },
@@ -209,7 +209,8 @@ export default function OrderMasterPage() {
           { key: "filling", label: "Filling", sortable: true },
           { key: "stone", label: "Stone", sortable: true },
           { key: "polish", label: "Polish", sortable: true },
-          photoColumn
+          photoColumn,
+          actionColumn
         ];
     }
   };

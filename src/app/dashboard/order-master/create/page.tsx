@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import Select from "@/components/ui/Select";
 import { useAppData } from "@/context/AppDataContext";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, XCircle } from "lucide-react";
 
 export default function CreateOrderPage() {
   const router = useRouter();
@@ -65,6 +65,14 @@ export default function CreateOrderPage() {
     }
   };
 
+  const handleDeleteImage = (index: number) => {
+    if (files[index]) {
+      const newFiles = [...files];
+      newFiles[index] = null;
+      setFiles(newFiles);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -87,6 +95,26 @@ export default function CreateOrderPage() {
   const handleSave = () => {
     addOrder({ ...formData, addedBy, files });
     router.push("/dashboard/order-master");
+  };
+
+  const handleClear = () => {
+    setFormData({
+      deliveryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      customerId: "",
+      productId: "",
+      colorCode: "",
+      status: "Order Confirmed",
+      gWt: "",
+      lWt: "",
+      nWt: "",
+      purity: "",
+      pcs: "",
+      size: "",
+      height: "",
+      width: "",
+      orderDescription: ""
+    });
+    setFiles([null, null, null, null]);
   };
 
   return (
@@ -191,23 +219,52 @@ export default function CreateOrderPage() {
       <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Upload Photos</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[0, 1, 2, 3].map(index => (
-            <div key={index} className="space-y-1.5">
-              <label className="text-sm font-medium text-gray-700">Upload Image {index + 1}</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(index, e)}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 border border-gray-300 rounded-sm cursor-pointer"
-              />
-            </div>
-          ))}
+          {[0, 1, 2, 3].map(index => {
+            const currentFile = files[index];
+            return (
+              <div key={index} className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Upload Image {index + 1}</label>
+                {currentFile && (
+                  <div className="mb-2 relative group">
+                    <img
+                      src={URL.createObjectURL(currentFile)}
+                      alt={`New Image ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-md border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600"
+                      title="Remove Selected File"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <div className="relative mt-2">
+                  <input
+                    type="file"
+                    id={`file-upload-${index}`}
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(index, e)}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor={`file-upload-${index}`}
+                    className="block w-full text-center text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md py-2 px-4 cursor-pointer transition-colors shadow-sm"
+                  >
+                    {currentFile ? "Change Image" : "Choose File"}
+                  </label>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       <div className="flex justify-center gap-4 pt-4">
         <Button variant="primary" onClick={handleSave}>Save</Button>
-        <Button variant="secondary" className="bg-gray-500 text-white hover:bg-gray-600">Clear</Button>
+        <Button variant="secondary" onClick={handleClear} className="bg-gray-500 text-white hover:bg-gray-600">Clear</Button>
         <Button variant="primary" className="bg-red-500 hover:bg-red-600 hover:shadow-red-500/20 border-red-500 text-white" onClick={() => router.back()}>Cancel</Button>
       </div>
     </div>
