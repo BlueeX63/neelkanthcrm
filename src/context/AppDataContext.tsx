@@ -51,6 +51,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // File upload validation constants
+  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
   // Fetch initial data
   useEffect(() => {
     const fetchAllData = async () => {
@@ -389,13 +393,23 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         for (let i = 0; i < order.files.length; i++) {
           const file = order.files[i];
           if (file) {
+            // Validate file type and size
+            if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+              alert(`File "${file.name}" is not a supported image type. Only JPEG, PNG, WebP, and GIF are allowed.`);
+              continue;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+              alert(`File "${file.name}" exceeds 5MB size limit.`);
+              continue;
+            }
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random()}.${fileExt}`;
             const filePath = `orders/${fileName}`;
             
             const { error: uploadError } = await supabase.storage
               .from('order-images')
-              .upload(filePath, file);
+              .upload(filePath, file, { contentType: file.type, upsert: false });
 
             if (!uploadError) {
               const { data: publicUrlData } = supabase.storage
@@ -404,7 +418,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
               photoUrls[i] = publicUrlData.publicUrl;
             } else {
               console.error("Upload error:", uploadError);
-              alert(`Image upload failed: ${uploadError.message}. Please check your Supabase Storage policies.`);
+              alert(`Image upload failed. Please try again.`);
             }
           }
         }
@@ -517,13 +531,23 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         for (let i = 0; i < data.files.length; i++) {
           const file = data.files[i];
           if (file) {
+            // Validate file type and size
+            if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+              alert(`File "${file.name}" is not a supported image type. Only JPEG, PNG, WebP, and GIF are allowed.`);
+              continue;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+              alert(`File "${file.name}" exceeds 5MB size limit.`);
+              continue;
+            }
+
             const fileExt = file.name.split('.').pop();
             const fileName = `${Math.random()}.${fileExt}`;
             const filePath = `orders/${fileName}`;
             
             const { error: uploadError } = await supabase.storage
               .from('order-images')
-              .upload(filePath, file);
+              .upload(filePath, file, { contentType: file.type, upsert: false });
 
             if (!uploadError) {
               const { data: publicUrlData } = supabase.storage
@@ -532,7 +556,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
               photoUrls[i] = publicUrlData.publicUrl;
             } else {
               console.error("Upload error:", uploadError);
-              alert(`Image upload failed: ${uploadError.message}. Please check your Supabase Storage policies.`);
+              alert(`Image upload failed. Please try again.`);
             }
           }
         }

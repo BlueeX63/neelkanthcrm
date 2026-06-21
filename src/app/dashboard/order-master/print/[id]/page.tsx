@@ -35,13 +35,9 @@ export default function PrintOrderPage() {
   if (isLoading) return <div className="p-6 font-sans">Loading order details...</div>;
   if (!order) return <div className="p-6 font-sans">Order not found</div>;
 
-  let finalItemName = order.itemName;
   let finalItemTouch = order.purity;
   if (order.productId) {
     const product = items.find(i => i.id === order.productId);
-    if ((!finalItemName || finalItemName === "-") && product) {
-      finalItemName = product.itemName || "-";
-    }
     if ((!finalItemTouch || finalItemTouch === "-") && product) {
       finalItemTouch = product.touch || "-";
     }
@@ -159,7 +155,7 @@ export default function PrintOrderPage() {
                 </tr>
                 <tr>
                   <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-24 font-bold shrink-0">Design No.</span><span>: {finalItemName || '-'}</span></div>
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Touch</span><span>: {finalItemTouch || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
                     <div className="flex"><span className="w-28 font-bold shrink-0">PCS</span><span>: {order.pcs || '-'}</span></div>
@@ -167,7 +163,7 @@ export default function PrintOrderPage() {
                 </tr>
                 <tr>
                   <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-24 font-bold shrink-0">Touch</span><span>: {finalItemTouch || '-'}</span></div>
+                    <div className="flex"><span className="w-24 font-bold shrink-0">G.Weight</span><span>: {order.gWt || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
                     <div className="flex"><span className="w-28 font-bold shrink-0">Size</span><span>: {order.size || '-'}</span></div>
@@ -175,10 +171,9 @@ export default function PrintOrderPage() {
                 </tr>
                 <tr>
                   <td className="border-b-[1.5px] border-r-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-24 font-bold shrink-0">G.Weight</span><span>: {order.gWt || '-'}</span></div>
+                    <div className="flex"><span className="w-24 font-bold shrink-0">Color</span><span>: {order.colorCode || '-'}</span></div>
                   </td>
                   <td className="border-b-[1.5px] border-black p-1.5 px-3 text-[13px] w-1/2">
-                    <div className="flex"><span className="w-28 font-bold shrink-0">Color</span><span>: {order.colorCode || '-'}</span></div>
                   </td>
                 </tr>
                 <tr>

@@ -135,8 +135,26 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
 
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (lockoutUntil) {
+      const timer = setInterval(() => {
+        if (Date.now() > lockoutUntil) {
+          setLockoutUntil(null);
+          setFailedAttempts(0);
+          setError(null);
+        }
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [lockoutUntil]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutUntil && Date.now() < lockoutUntil) return;
+
     setIsLoading(true);
     setError(null);
 
@@ -148,14 +166,24 @@ export default function LoginPage() {
 
       if (error) throw error;
 
+      setFailedAttempts(0);
       router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
-      setError("Invalid login credentials.");
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      if (newAttempts >= 5) {
+        setLockoutUntil(Date.now() + 30000); // 30 seconds lockout
+        setError("Too many failed attempts. Please wait 30 seconds.");
+      } else {
+        setError(`Invalid login credentials. (${5 - newAttempts} attempts remaining)`);
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  const isLockedOut = lockoutUntil !== null && Date.now() < lockoutUntil;
 
   return (
     <div className="min-h-screen w-full flex bg-black font-sans text-white overflow-hidden">
@@ -249,10 +277,10 @@ export default function LoginPage() {
               type="submit" 
               whileHover="hover"
               whileTap={{ scale: 0.98 }}
-              disabled={isLoading}
+              disabled={isLoading || isLockedOut}
               className={cn(
                 "relative w-full flex justify-center items-center mt-8 py-3.5 px-4 rounded-xl text-sm font-semibold overflow-hidden border border-white transition-all duration-300",
-                isLoading ? "opacity-70 cursor-not-allowed bg-white text-black" : "bg-white cursor-pointer"
+                isLoading || isLockedOut ? "opacity-70 cursor-not-allowed bg-white text-black" : "bg-white cursor-pointer"
               )}
             >
               <span className="relative z-10 flex items-center mix-blend-difference text-white">

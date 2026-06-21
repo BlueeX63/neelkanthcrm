@@ -7,7 +7,7 @@ import { clientEnv, serverEnv } from '@/lib/env';
 // Zod schema for input validation
 const createUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8).optional().or(z.literal('')),
+  password: z.string().min(8),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   phone: z.string().optional(),
@@ -61,7 +61,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (user.user_metadata?.user_type !== 'ADMINISTRATOR') {
+    // Check role from database, NOT from user_metadata (which users can self-modify)
+    const { data: dbUser } = await supabaseAuth
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
+      .single();
+
+    if (dbUser?.user_type !== 'ADMINISTRATOR') {
       return NextResponse.json({ error: 'Forbidden: Only administrators can create users.' }, { status: 403 });
     }
 
@@ -89,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
-      password: password || 'defaultpass123!',
+      password: password,
       email_confirm: true,
       user_metadata: {
         first_name: firstName,

@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { z } from 'zod';
 
+// --- Schemas (no .passthrough() — only declared fields are allowed) ---
+
 const customerSchema = z.object({
   customer_name: z.string().min(1),
   customer_code: z.string().optional(),
@@ -11,58 +13,14 @@ const customerSchema = z.object({
   city: z.string().optional(),
   gst_no: z.string().optional(),
   status: z.string().optional(),
-}).passthrough();
-
-export async function addCustomerAction(data: any) {
-  const parsedData = customerSchema.parse(data);
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("customers").insert(parsedData).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function updateCustomerAction(id: string, data: any) {
-  const parsedData = customerSchema.partial().parse(data);
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("customers").update(parsedData).eq("id", id).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function deleteCustomerAction(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("customers").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
+});
 
 const karigarSchema = z.object({
   karigar_name: z.string().min(1),
   karigar_code: z.string().optional(),
   mobile_no: z.string().optional(),
   status: z.string().optional(),
-}).passthrough();
-
-export async function addKarigarAction(data: any) {
-  const parsedData = karigarSchema.parse(data);
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("karigars").insert(parsedData).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function updateKarigarAction(id: string, data: any) {
-  const parsedData = karigarSchema.partial().parse(data);
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("karigars").update(parsedData).eq("id", id).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function deleteKarigarAction(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("karigars").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
+});
 
 const itemSchema = z.object({
   item_name: z.string().min(1),
@@ -73,44 +31,18 @@ const itemSchema = z.object({
   status: z.string().optional(),
   added_by: z.string().optional(),
   date: z.string().optional(),
-}).passthrough();
+});
 
-export async function addItemAction(data: any) {
-  const parsedData = itemSchema.parse(data);
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("items").insert(parsedData).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function updateItemAction(id: string, data: any) {
-  const parsedData = itemSchema.partial().parse(data);
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("items").update(parsedData).eq("id", id).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function deleteItemAction(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("items").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
-
-export async function updateUserAction(id: string, data: any) {
-  const supabase = await createClient();
-  const { data: result, error } = await supabase.from("users").update(data).eq("id", id).select().single();
-  if (error) throw new Error(error.message);
-  return result;
-}
-
-export async function deleteUserAction(id: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.from("users").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-}
-
-// Orders and History
+const userUpdateSchema = z.object({
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  user_type: z.string().optional(),
+  status: z.string().optional(),
+  name: z.string().optional(),
+  role: z.string().optional(),
+});
 
 const orderSchema = z.object({
   order_no: z.string().min(1),
@@ -130,13 +62,177 @@ const orderSchema = z.object({
   cancel_reason: z.string().optional().nullable(),
   cancel_date: z.string().optional().nullable(),
   added_by: z.string().optional().nullable(),
-}).passthrough();
+  delivery_date: z.string().optional().nullable(),
+  product_id: z.string().optional().nullable(),
+  g_wt: z.string().optional().nullable(),
+  l_wt: z.string().optional().nullable(),
+  n_wt: z.string().optional().nullable(),
+  pcs: z.union([z.string(), z.number()]).optional().nullable(),
+  size: z.string().optional().nullable(),
+  height: z.string().optional().nullable(),
+  width: z.string().optional().nullable(),
+  purity: z.string().optional().nullable(),
+  order_description: z.string().optional().nullable(),
+  order_image: z.string().optional().nullable(),
+  photo_1: z.string().optional().nullable(),
+  photo_2: z.string().optional().nullable(),
+  photo_3: z.string().optional().nullable(),
+  photo_4: z.string().optional().nullable(),
+  process_name: z.string().optional().nullable(),
+  assigned_karigar_id: z.string().optional().nullable(),
+  assigned_date: z.string().optional().nullable(),
+  receiving_date: z.string().optional().nullable(),
+  delivered_date: z.string().optional().nullable(),
+});
+
+const historySchema = z.object({
+  order_id: z.string(),
+  karigar_id: z.string().nullable().optional(),
+  process_name: z.string().nullable().optional(),
+  action_type: z.enum(['Assigned', 'Received']),
+  action_date: z.string().nullable().optional(),
+  expected_date: z.string().nullable().optional(),
+  received_date: z.string().nullable().optional(),
+});
+
+const historyUpdateSchema = z.object({
+  action_type: z.enum(['Assigned', 'Received']).optional(),
+  received_date: z.string().nullable().optional(),
+  action_date: z.string().nullable().optional(),
+  expected_date: z.string().nullable().optional(),
+});
+
+// --- Customer Actions ---
+
+export async function addCustomerAction(data: any) {
+  const parsedData = customerSchema.parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("customers").insert(parsedData).select().single();
+  if (error) {
+    console.error("DB Error [addCustomer]:", error.message);
+    throw new Error("Failed to add customer. Please try again.");
+  }
+  return result;
+}
+
+export async function updateCustomerAction(id: string, data: any) {
+  const parsedData = customerSchema.partial().parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("customers").update(parsedData).eq("id", id).select().single();
+  if (error) {
+    console.error("DB Error [updateCustomer]:", error.message);
+    throw new Error("Failed to update customer. Please try again.");
+  }
+  return result;
+}
+
+export async function deleteCustomerAction(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("customers").delete().eq("id", id);
+  if (error) {
+    console.error("DB Error [deleteCustomer]:", error.message);
+    throw new Error("Failed to delete customer. Please try again.");
+  }
+}
+
+// --- Karigar Actions ---
+
+export async function addKarigarAction(data: any) {
+  const parsedData = karigarSchema.parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("karigars").insert(parsedData).select().single();
+  if (error) {
+    console.error("DB Error [addKarigar]:", error.message);
+    throw new Error("Failed to add karigar. Please try again.");
+  }
+  return result;
+}
+
+export async function updateKarigarAction(id: string, data: any) {
+  const parsedData = karigarSchema.partial().parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("karigars").update(parsedData).eq("id", id).select().single();
+  if (error) {
+    console.error("DB Error [updateKarigar]:", error.message);
+    throw new Error("Failed to update karigar. Please try again.");
+  }
+  return result;
+}
+
+export async function deleteKarigarAction(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("karigars").delete().eq("id", id);
+  if (error) {
+    console.error("DB Error [deleteKarigar]:", error.message);
+    throw new Error("Failed to delete karigar. Please try again.");
+  }
+}
+
+// --- Item Actions ---
+
+export async function addItemAction(data: any) {
+  const parsedData = itemSchema.parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("items").insert(parsedData).select().single();
+  if (error) {
+    console.error("DB Error [addItem]:", error.message);
+    throw new Error("Failed to add item. Please try again.");
+  }
+  return result;
+}
+
+export async function updateItemAction(id: string, data: any) {
+  const parsedData = itemSchema.partial().parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("items").update(parsedData).eq("id", id).select().single();
+  if (error) {
+    console.error("DB Error [updateItem]:", error.message);
+    throw new Error("Failed to update item. Please try again.");
+  }
+  return result;
+}
+
+export async function deleteItemAction(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("items").delete().eq("id", id);
+  if (error) {
+    console.error("DB Error [deleteItem]:", error.message);
+    throw new Error("Failed to delete item. Please try again.");
+  }
+}
+
+// --- User Actions ---
+
+export async function updateUserAction(id: string, data: any) {
+  const parsedData = userUpdateSchema.parse(data);
+  const supabase = await createClient();
+  const { data: result, error } = await supabase.from("users").update(parsedData).eq("id", id).select().single();
+  if (error) {
+    console.error("DB Error [updateUser]:", error.message);
+    throw new Error("Failed to update user. Please try again.");
+  }
+  return result;
+}
+
+export async function deleteUserAction(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("users").delete().eq("id", id);
+  if (error) {
+    console.error("DB Error [deleteUser]:", error.message);
+    throw new Error("Failed to delete user. Please try again.");
+  }
+}
+
+// --- Order Actions ---
 
 export async function addOrderAction(data: any) {
   const parsedData = orderSchema.parse(data);
   const supabase = await createClient();
   const { data: result, error } = await supabase.from("orders").insert(parsedData).select().single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("DB Error [addOrder]:", error.message);
+    throw new Error("Failed to create order. Please try again.");
+  }
   return result;
 }
 
@@ -144,27 +240,42 @@ export async function updateOrderAction(id: string, data: any) {
   const parsedData = orderSchema.partial().parse(data);
   const supabase = await createClient();
   const { data: result, error } = await supabase.from("orders").update(parsedData).eq("id", id).select().single();
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("DB Error [updateOrder]:", error.message);
+    throw new Error("Failed to update order. Please try again.");
+  }
   return result;
 }
 
 export async function deleteOrderAction(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("orders").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("DB Error [deleteOrder]:", error.message);
+    throw new Error("Failed to delete order. Please try again.");
+  }
 }
 
+// --- History Actions ---
+
 export async function addHistoryAction(data: any) {
+  const parsedData = historySchema.parse(data);
   const supabase = await createClient();
-  const { data: result, error } = await supabase.from("order_karigar_history").insert(data).select().single();
-  if (error) throw new Error(error.message);
+  const { data: result, error } = await supabase.from("order_karigar_history").insert(parsedData).select().single();
+  if (error) {
+    console.error("DB Error [addHistory]:", error.message);
+    throw new Error("Failed to add history record. Please try again.");
+  }
   return result;
 }
 
 export async function getHistoryAction(orderId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.from("order_karigar_history").select("*").eq("order_id", orderId);
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("DB Error [getHistory]:", error.message);
+    throw new Error("Failed to fetch history. Please try again.");
+  }
   return data;
 }
 
@@ -174,14 +285,21 @@ export async function getOrdersAction() {
     .from("orders")
     .select(`*, order_karigar_history(*)`)
     .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("DB Error [getOrders]:", error.message);
+    throw new Error("Failed to fetch orders. Please try again.");
+  }
   return data;
 }
 
 export async function updateHistoryAction(id: string, data: any) {
+  const parsedData = historyUpdateSchema.parse(data);
   const supabase = await createClient();
-  const { data: result, error } = await supabase.from("order_karigar_history").update(data).eq("id", id).select().single();
-  if (error) throw new Error(error.message);
+  const { data: result, error } = await supabase.from("order_karigar_history").update(parsedData).eq("id", id).select().single();
+  if (error) {
+    console.error("DB Error [updateHistory]:", error.message);
+    throw new Error("Failed to update history record. Please try again.");
+  }
   return result;
 }
 
@@ -193,7 +311,10 @@ export async function closePreviousAssignedHistoryAction(orderId: string, receiv
     .eq("order_id", orderId)
     .eq("action_type", "Assigned");
     
-  if (selectError) throw new Error(selectError.message);
+  if (selectError) {
+    console.error("DB Error [closePreviousHistory]:", selectError.message);
+    throw new Error("Failed to close previous history. Please try again.");
+  }
 
   if (openHistories && openHistories.length > 0) {
     for (const h of openHistories) {
@@ -204,7 +325,10 @@ export async function closePreviousAssignedHistoryAction(orderId: string, receiv
           received_date: receivedDate
         })
         .eq("id", h.id);
-      if (updateError) throw new Error(updateError.message);
+      if (updateError) {
+        console.error("DB Error [closePreviousHistory update]:", updateError.message);
+        throw new Error("Failed to update history record. Please try again.");
+      }
     }
     return openHistories.length;
   }
@@ -220,7 +344,10 @@ export async function revertHistoryToAssignedAction(orderId: string) {
     .order("created_at", { ascending: false })
     .limit(1);
 
-  if (selectError) throw new Error(selectError.message);
+  if (selectError) {
+    console.error("DB Error [revertHistory]:", selectError.message);
+    throw new Error("Failed to revert history. Please try again.");
+  }
 
   if (latestHistories && latestHistories.length > 0) {
     const { error: updateError } = await supabase
@@ -230,7 +357,10 @@ export async function revertHistoryToAssignedAction(orderId: string) {
         received_date: null
       })
       .eq("id", latestHistories[0].id);
-    if (updateError) throw new Error(updateError.message);
+    if (updateError) {
+      console.error("DB Error [revertHistory update]:", updateError.message);
+      throw new Error("Failed to revert history. Please try again.");
+    }
     return true;
   }
   return false;
@@ -245,25 +375,21 @@ export async function deleteLatestHistoryAction(orderId: string) {
     .order("created_at", { ascending: false })
     .limit(1);
 
-  if (selectError) throw new Error(selectError.message);
+  if (selectError) {
+    console.error("DB Error [deleteLatestHistory]:", selectError.message);
+    throw new Error("Failed to delete history. Please try again.");
+  }
 
   if (latestHistories && latestHistories.length > 0) {
     const { error: deleteError } = await supabase
       .from("order_karigar_history")
       .delete()
       .eq("id", latestHistories[0].id);
-    if (deleteError) throw new Error(deleteError.message);
+    if (deleteError) {
+      console.error("DB Error [deleteLatestHistory delete]:", deleteError.message);
+      throw new Error("Failed to delete history. Please try again.");
+    }
     return true;
   }
   return false;
-}
-
-// Storage Action
-export async function getStorageSignedUrl(bucket: string, path: string) {
-  const supabase = await createClient();
-  // Using an upload action doesn't work well via server action for large files,
-  // so we generate a signed upload URL or we can let them use the frontend client
-  // BUT the frontend client is insecure without bucket policies.
-  // Given we will add bucket policies for auth, uploading from frontend client is fine.
-  // We'll skip file upload server action for now and rely on bucket RLS.
 }

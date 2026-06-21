@@ -52,7 +52,13 @@ export async function updateSession(request: NextRequest) {
 
   // Authorization check for Admin-only routes
   if (user && request.nextUrl.pathname.startsWith('/dashboard/users-master')) {
-    if (user.user_metadata?.user_type !== 'ADMINISTRATOR') {
+    const { data: dbUser } = await supabase
+      .from('users')
+      .select('user_type')
+      .eq('id', user.id)
+      .single();
+
+    if (dbUser?.user_type !== 'ADMINISTRATOR') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
