@@ -442,7 +442,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         name: order.name || "-",
         status: order.status || "Assign Karigar",
         cad: order.cad || "-",
-        designing: order.designing || "-",
+        cpx: order.cpx || "-",
         casting: order.casting || "-",
         filling: order.filling || "-",
         stone: order.stone || "-",
@@ -570,7 +570,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (data.name !== undefined) dbData.name = data.name;
       if (data.status !== undefined) dbData.status = data.status;
       if (data.cad !== undefined) dbData.cad = data.cad;
-      if (data.designing !== undefined) dbData.designing = data.designing;
+      if (data.cpx !== undefined) dbData.cpx = data.cpx;
       if (data.casting !== undefined) dbData.casting = data.casting;
       if (data.filling !== undefined) dbData.filling = data.filling;
       if (data.stone !== undefined) dbData.stone = data.stone;

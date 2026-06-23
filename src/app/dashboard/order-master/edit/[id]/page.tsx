@@ -73,6 +73,25 @@ export default function EditOrderPage() {
     router.push("/dashboard/order-master");
   };
 
+  const getDeliveryDays = () => {
+    if (!formData.deliveryDate) return "0 Days";
+    const delivery = new Date(formData.deliveryDate);
+    
+    let baseDate = new Date();
+    if (order && order.date) {
+      const parts = order.date.split('-');
+      if (parts.length === 3) {
+        baseDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      }
+    }
+    
+    baseDate.setHours(0, 0, 0, 0);
+    delivery.setHours(0, 0, 0, 0);
+    const diffTime = delivery.getTime() - baseDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `${diffDays} Days` : "0 Days";
+  };
+
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this order?")) {
       deleteOrder(id);
@@ -96,19 +115,19 @@ export default function EditOrderPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 space-y-2">
-          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Order No:</span> <span className="text-gray-600">0005223</span></div>
-          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Order Date:</span> <span className="text-gray-600">14-06-2026</span></div>
+          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Order No:</span> <span className="text-gray-600">{order.orderNo || "-"}</span></div>
+          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Order Date:</span> <span className="text-gray-600">{order.date || "-"}</span></div>
         </div>
         <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 space-y-2">
-          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add By:</span> <span className="text-gray-600">ROHIT KHATRI</span></div>
-          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add Time:</span> <span className="text-gray-600">08:43:43 pm</span></div>
+          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add By:</span> <span className="text-gray-600">{order.addedBy || "-"}</span></div>
+          <div className="flex justify-between text-sm"><span className="font-semibold text-gray-700">Add Time:</span> <span className="text-gray-600">{order.time || "-"}</span></div>
         </div>
         <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 space-y-2">
           <div className="flex justify-between items-center text-sm">
             <span className="font-semibold text-gray-700">Delivery Date:</span>
             <input name="deliveryDate" value={formData.deliveryDate || ""} onChange={handleChange} type="date" className="border border-gray-300 rounded-sm px-2 py-1 text-gray-700 focus:outline-none focus:border-black" />
           </div>
-          <div className="flex justify-between text-sm pt-1"><span className="font-semibold text-gray-700">Delivery Days:</span> <span className="text-gray-600">10 Days</span></div>
+          <div className="flex justify-between text-sm pt-1"><span className="font-semibold text-gray-700">Delivery Days:</span> <span className="text-gray-600">{getDeliveryDays()}</span></div>
         </div>
       </div>
 

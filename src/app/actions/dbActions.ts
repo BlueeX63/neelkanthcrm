@@ -51,7 +51,7 @@ const orderSchema = z.object({
   name: z.string().optional().nullable(),
   status: z.string().optional().nullable(),
   cad: z.string().optional().nullable(),
-  designing: z.string().optional().nullable(),
+  cpx: z.string().optional().nullable(),
   casting: z.string().optional().nullable(),
   filling: z.string().optional().nullable(),
   stone: z.string().optional().nullable(),
