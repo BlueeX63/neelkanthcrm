@@ -2,7 +2,7 @@
 
 import StatCard from "@/components/ui/StatCard";
 import ChartCard from "@/components/ui/ChartCard";
-import { Users, UserPlus, HardHat, Package, ShoppingCart, CheckCircle2, UserCog, UserCheck, Truck, XCircle } from "lucide-react";
+import { Users, UserPlus, HardHat, Package, ShoppingCart, CheckCircle2, UserCog, UserCheck, Truck, XCircle, Edit } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useAppData } from "@/context/AppDataContext";
 import ApexChart from "@/components/ui/ApexChart";
@@ -127,6 +127,20 @@ export default function DashboardPage() {
     { name: 'Cancelled', value: cancelledCount, color: '#f43f5e' },
   ].filter(d => d.value > 0); // Recharts pie might be empty if all 0, which is fine
 
+  const upcomingDeliveries = orders
+    .filter(order => {
+      if (order.status === "Delivered" || order.status === "Cancelled") return false;
+      if (!order.deliveryDate) return false;
+      const delivery = new Date(order.deliveryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      delivery.setHours(0, 0, 0, 0);
+      const diffTime = delivery.getTime() - today.getTime();
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return days <= 2; // Includes today, tomorrow, day after tomorrow, and overdue
+    })
+    .sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -206,6 +220,71 @@ export default function DashboardPage() {
             ))}
           </div>
         </ChartCard>
+      </div>
+
+      <div className="bg-white p-6 rounded-md shadow-sm border border-gray-200 mt-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Truck className="w-5 h-5 text-orange-500" />
+          Upcoming Deliveries <span className="text-sm font-normal text-gray-500">(Next 2 Days or Overdue)</span>
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-50 text-gray-700">
+              <tr>
+                <th className="px-4 py-3 font-semibold border-b">Order No</th>
+                <th className="px-4 py-3 font-semibold border-b">Customer</th>
+                <th className="px-4 py-3 font-semibold border-b">Product</th>
+                <th className="px-4 py-3 font-semibold border-b">Delivery Date</th>
+                <th className="px-4 py-3 font-semibold border-b">Days Left</th>
+                <th className="px-4 py-3 font-semibold border-b">Status</th>
+                <th className="px-4 py-3 font-semibold border-b text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upcomingDeliveries.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">No upcoming deliveries.</td>
+                </tr>
+              ) : (
+                upcomingDeliveries.map((order) => {
+                  const customer = customers.find(c => c.id === order.customerId);
+                  const item = items.find(i => i.id === order.productId);
+                  const delivery = new Date(order.deliveryDate);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  delivery.setHours(0, 0, 0, 0);
+                  const days = Math.ceil((delivery.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                  
+                  return (
+                    <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        {order.orderNo || '-'}
+                      </td>
+                      <td className="px-4 py-3">{customer?.customerName || '-'}</td>
+                      <td className="px-4 py-3">{item?.itemName || '-'}</td>
+                      <td className="px-4 py-3">{order.deliveryDate}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${days < 0 ? 'bg-red-100 text-red-800 border-red-300' : 'bg-orange-100 text-orange-800 border-orange-300'}`}>
+                          {days < 0 ? `${Math.abs(days)} days overdue` : days === 0 ? 'Today' : `${days} day${days > 1 ? 's' : ''}`}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/60 text-gray-800 border border-black/10">
+                          {order.status || 'Pending'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <Link href={`/dashboard/order-master/edit/${order.id}`} className={`inline-flex items-center justify-center p-1.5 rounded-md hover:bg-black/5 transition-colors ${days < 0 ? 'text-red-700' : 'text-orange-700'}`} title="Edit Order">
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

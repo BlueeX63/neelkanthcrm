@@ -39,7 +39,7 @@ export default function CreateOrderPage() {
   const orderNumber = (orders.length + 5221 + 1).toString().padStart(7, '0');
 
   const [formData, setFormData] = useState({
-    deliveryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default 10 days from now
+    deliveryDate: "",
     customerId: "",
     productId: "",
     colorCode: "",
@@ -82,7 +82,7 @@ export default function CreateOrderPage() {
   };
 
   const getDeliveryDays = () => {
-    if (!formData.deliveryDate) return "0 Days";
+    if (!formData.deliveryDate) return "";
     const delivery = new Date(formData.deliveryDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -93,13 +93,17 @@ export default function CreateOrderPage() {
   };
 
   const handleSave = () => {
+    if (!formData.deliveryDate) {
+      alert("Please enter a Delivery Date.");
+      return;
+    }
     addOrder({ ...formData, addedBy, files });
     router.push("/dashboard/order-master");
   };
 
   const handleClear = () => {
     setFormData({
-      deliveryDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      deliveryDate: "",
       customerId: "",
       productId: "",
       colorCode: "",
@@ -140,7 +144,7 @@ export default function CreateOrderPage() {
         </div>
         <div className="bg-white p-5 rounded-md shadow-sm border border-gray-200 space-y-2">
           <div className="flex justify-between items-center text-sm">
-            <span className="font-semibold text-gray-700">Delivery Date:</span>
+            <span className="font-semibold text-gray-700">Delivery Date: <span className="text-red-500">*</span></span>
             <input name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} type="date" className="border border-gray-300 rounded-sm px-2 py-1 text-gray-700 focus:outline-none focus:border-black" />
           </div>
           <div className="flex justify-between text-sm pt-1"><span className="font-semibold text-gray-700">Delivery Days:</span> <span className="text-gray-600">{getDeliveryDays()}</span></div>
