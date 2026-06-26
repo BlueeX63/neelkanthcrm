@@ -13,16 +13,17 @@ import Link from "next/link";
 export default function DashboardPage() {
   const { users, customers, karigars, items, orders } = useAppData();
 
-  const ordersByDate = orders.reduce((acc, order) => {
+  const ordersDataByDate = orders.reduce((acc, order) => {
     const d = order.date;
     if (d) {
-      if (!acc[d]) acc[d] = 0;
-      acc[d]++;
+      if (!acc[d]) acc[d] = { count: 0, grossWeight: 0 };
+      acc[d].count++;
+      acc[d].grossWeight += Number(order.gWt || 0);
     }
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, { count: number; grossWeight: number }>);
 
-  const sortedDates = Object.keys(ordersByDate).sort((a, b) => {
+  const sortedDates = Object.keys(ordersDataByDate).sort((a, b) => {
     const [d1, m1, y1] = a.split('-');
     const [d2, m2, y2] = b.split('-');
     return new Date(`${y1}-${m1}-${d1}`).getTime() - new Date(`${y2}-${m2}-${d2}`).getTime();
@@ -32,12 +33,12 @@ export default function DashboardPage() {
     {
       name: 'Orders Count',
       type: 'line',
-      data: sortedDates.map(date => ordersByDate[date])
+      data: sortedDates.map(date => ordersDataByDate[date].count)
     },
     {
       name: 'Gross Weight',
       type: 'line',
-      data: sortedDates.map(date => ordersByDate[date] * 12500) // Extrapolating a realistic gross weight based on order count
+      data: sortedDates.map(date => ordersDataByDate[date].grossWeight)
     }
   ];
 
