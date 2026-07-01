@@ -14,7 +14,12 @@ interface ModalProps {
   karigars: any[];
 }
 
-export function AssignKarigarModal({ isOpen, onClose, onSubmit, selectedOrders, karigars }: ModalProps) {
+interface AssignModalProps extends ModalProps {
+  defaultProcess?: string;
+  isReassign?: boolean;
+}
+
+export function AssignKarigarModal({ isOpen, onClose, onSubmit, selectedOrders, karigars, defaultProcess, isReassign }: AssignModalProps) {
   const [formData, setFormData] = useState({
     processName: "GHAT",
     karigarId: "",
@@ -26,13 +31,18 @@ export function AssignKarigarModal({ isOpen, onClose, onSubmit, selectedOrders, 
     if (isOpen && selectedOrders.length > 0) {
       const sample = selectedOrders[0];
       setFormData({
-        processName: sample.processName || "GHAT",
+        processName: defaultProcess || sample.processName || "GHAT",
         karigarId: sample.assignedKarigarId || "",
         assignedDate: sample.assignedDate || new Date().toISOString().split('T')[0],
         receivingDate: sample.receivingDate || ""
       });
+    } else if (isOpen) {
+      setFormData(prev => ({
+        ...prev,
+        processName: defaultProcess || prev.processName || "GHAT"
+      }));
     }
-  }, [isOpen, selectedOrders]);
+  }, [isOpen, selectedOrders, defaultProcess]);
 
   if (!isOpen) return null;
 
@@ -45,7 +55,7 @@ export function AssignKarigarModal({ isOpen, onClose, onSubmit, selectedOrders, 
         className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden"
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="font-semibold text-lg text-gray-900">Assign Karigar ({selectedOrders.length} orders)</h3>
+          <h3 className="font-semibold text-lg text-gray-900">{isReassign ? "ReAssign Karigar" : "Assign Karigar"} ({selectedOrders.length} orders)</h3>
           <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-5 space-y-4">
@@ -96,7 +106,7 @@ export function AssignKarigarModal({ isOpen, onClose, onSubmit, selectedOrders, 
         </div>
         <div className="flex justify-end gap-3 p-4 border-t border-gray-100 bg-gray-50/50">
           <Button variant="outline" onClick={onClose} className="bg-white">Cancel</Button>
-          <Button variant="primary" onClick={() => onSubmit(formData)} disabled={!formData.karigarId}>Assign Karigar</Button>
+          <Button variant="primary" onClick={() => onSubmit(formData)} disabled={!formData.karigarId}>{isReassign ? "ReAssign Karigar" : "Assign Karigar"}</Button>
         </div>
       </motion.div>
     </div>

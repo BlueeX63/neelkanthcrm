@@ -37,7 +37,7 @@ export default function OrderMasterPage() {
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   // Modals state
-  const [modalState, setModalState] = useState<{ type: 'assign' | 'receive' | 'deliver' | 'cancel' | 'history' | null, orderId?: string }>({ type: null });
+  const [modalState, setModalState] = useState<{ type: 'assign' | 'reassign' | 'receive' | 'deliver' | 'cancel' | 'history' | null, orderId?: string }>({ type: null });
 
   const enrichedOrders = orders.map(order => {
     let finalName = "-";
@@ -112,11 +112,11 @@ export default function OrderMasterPage() {
          <button onClick={() => window.open(`/dashboard/order-master/print/${row.id}`, '_blank')} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Print Invoice">
            <Printer className="w-4 h-4 group-hover:scale-110 transition-transform" />
          </button>
-         {(filters.status === "Assigned Karigar" || filters.status === "Received from Karigar" || filters.status === "Delivered") && (
-           <button onClick={() => setModalState({ type: 'history', orderId: row.id })} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Karigar History">
-             <ClipboardList className="w-4 h-4 group-hover:scale-110 transition-transform" />
-           </button>
-         )}
+          {(filters.status === "Assigned Karigar" || filters.status === "Received from Karigar" || filters.status === "Delivered" || Boolean(filters.process)) && (
+            <button onClick={() => setModalState({ type: 'history', orderId: row.id })} className="inline-flex items-center justify-center p-2 rounded-md bg-gray-50 text-gray-500 hover:text-brand-600 hover:bg-brand-50 border border-gray-200 hover:border-brand-200 transition-colors cursor-pointer group" title="Karigar History">
+              <ClipboardList className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            </button>
+          )}
       </div>
     );
 
@@ -198,6 +198,23 @@ export default function OrderMasterPage() {
           actionColumn
         ];
       default:
+        if (filters.process) {
+          return [
+            { key: "orderNo", label: "Order No", sortable: true },
+            { key: "date", label: "Date", sortable: true },
+            { key: "name", label: "Customer", sortable: true },
+            { key: "processName", label: "Process", sortable: true },
+            { key: "karigarName", label: "Karigar", sortable: true },
+            { key: "assignedDate", label: "Assign Date", sortable: true },
+            { key: "receivingDate", label: "Est. Rcv Date", sortable: true },
+            { key: "itemName", label: "Product", sortable: true },
+            { key: "gWt", label: "GWT", sortable: true },
+            { key: "addedBy", label: "Added By", sortable: true },
+            photoColumn,
+            { key: "status", label: "Status", sortable: true },
+            actionColumn
+          ];
+        }
         return [
           { key: "orderNo", label: "Order No", sortable: true },
           { key: "date", label: "Date", sortable: true },
@@ -497,6 +514,31 @@ export default function OrderMasterPage() {
                   />
                 </div>
                 <div className="space-y-1.5 flex-1 w-full">
+                  <label className="text-xs font-bold text-gray-900">Process</label>
+                  <Select
+                    value={filters.process}
+                    onChange={v => {
+                      setFilters({
+                        ...filters,
+                        process: v,
+                        ...(v && (filters.status === "Delivered" || filters.status === "Cancelled") ? { status: "" } : {})
+                      });
+                      setSelectedOrders([]);
+                    }}
+                    options={[
+                      { value: "", label: "-- All --" },
+                      { value: "GHAT", label: "GHAT" },
+                      { value: "CAD", label: "CAD" },
+                      { value: "CPX", label: "CPX" },
+                      { value: "Casting", label: "Casting" },
+                      { value: "Filling", label: "Filling" },
+                      { value: "Stone Setting", label: "Stone Setting" },
+                      { value: "POLISHED", label: "POLISHED" }
+                    ]}
+                    placeholder="-- All --"
+                  />
+                </div>
+                <div className="space-y-1.5 flex-1 w-full">
                   <label className="text-xs font-bold text-gray-900">Status</label>
                   <Select
                     value={filters.status}
@@ -529,23 +571,36 @@ export default function OrderMasterPage() {
       </div>
 
       <div className="flex justify-end gap-2 mb-4">
-        {filters.status === "Order Confirmed" && (
+        {Boolean(filters.process) ? (
           <>
             <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-900 hover:bg-slate-800">Assign to Karigar</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
-          </>
-        )}
-        {filters.status === "Assigned Karigar" && (
-          <>
+            <Button variant="solid" onClick={() => setModalState({ type: 'reassign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-700 hover:bg-slate-800">ReAssign Orders</Button>
             <Button variant="solid" onClick={() => setModalState({ type: 'receive' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Receive from Karigar</Button>
             <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-700 hover:bg-slate-800">ReAssign Orders</Button>
           </>
-        )}
-        {filters.status === "Received from Karigar" && (
+        ) : (
           <>
-            <Button variant="solid" onClick={() => setModalState({ type: 'deliver' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Deliver to Customer</Button>
-            <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+            {filters.status === "Order Confirmed" && (
+              <>
+                <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-900 hover:bg-slate-800">Assign to Karigar</Button>
+                <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+              </>
+            )}
+            {filters.status === "Assigned Karigar" && (
+              <>
+                <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-900 hover:bg-slate-800">Assign to Karigar</Button>
+                <Button variant="solid" onClick={() => setModalState({ type: 'receive' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Receive from Karigar</Button>
+                <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+                <Button variant="solid" onClick={() => setModalState({ type: 'reassign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-700 hover:bg-slate-800">ReAssign Orders</Button>
+              </>
+            )}
+            {filters.status === "Received from Karigar" && (
+              <>
+                <Button variant="solid" onClick={() => setModalState({ type: 'assign' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-slate-900 hover:bg-slate-800">Assign to Karigar</Button>
+                <Button variant="solid" onClick={() => setModalState({ type: 'deliver' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-black hover:bg-gray-800">Deliver to Customer</Button>
+                <Button variant="solid" onClick={() => setModalState({ type: 'cancel' })} disabled={selectedOrders.length === 0} className="text-sm h-10 px-4 bg-red-600 hover:bg-red-700">Cancel Orders</Button>
+              </>
+            )}
           </>
         )}
       </div>
@@ -583,11 +638,13 @@ export default function OrderMasterPage() {
       />
 
       <AssignKarigarModal
-        isOpen={modalState.type === 'assign'}
+        isOpen={modalState.type === 'assign' || modalState.type === 'reassign'}
         onClose={() => setModalState({ type: null })}
         onSubmit={(data) => handleBulkAction('assign', data)}
         selectedOrders={orders.filter(o => selectedOrders.includes(o.id))}
         karigars={karigars}
+        defaultProcess={filters.process || undefined}
+        isReassign={modalState.type === 'reassign'}
       />
 
       <ReceiveKarigarModal
