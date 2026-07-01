@@ -219,7 +219,10 @@ export default function OrderMasterPage() {
     let match = true;
     if (filters.status && order.status !== filters.status) match = false;
     if (filters.customerName && order.name !== filters.customerName) match = false;
-    if (filters.process && order.processName?.toUpperCase() !== filters.process.toUpperCase()) match = false;
+    if (filters.process) {
+      if (order.processName?.toUpperCase() !== filters.process.toUpperCase()) match = false;
+      if (order.status === "Delivered" || order.status === "Cancelled") match = false;
+    }
     // Basic date filtering placeholder (assuming DD-MM-YYYY format in order.date)
     if (filters.dateFrom) {
       const dFrom = new Date(filters.dateFrom);
@@ -329,7 +332,11 @@ export default function OrderMasterPage() {
       { name: "POLISHED", color: "text-pink-500" }
     ];
     return processes.map(process => {
-      const processOrders = orders.filter(o => o.processName?.toUpperCase() === process.name.toUpperCase());
+      const processOrders = orders.filter(o => 
+        o.processName?.toUpperCase() === process.name.toUpperCase() &&
+        o.status !== "Delivered" &&
+        o.status !== "Cancelled"
+      );
       const totalPcs = processOrders.reduce((sum, o) => sum + (Number(o.pcs) || 0), 0);
       const totalWt = processOrders.reduce((sum, o) => sum + (Number(o.gWt) || 0), 0);
       return {
@@ -377,7 +384,11 @@ export default function OrderMasterPage() {
             <div
               key={i}
               onClick={() => {
-                setFilters({ ...filters, status: stat.statusFilter });
+                setFilters({
+                  ...filters,
+                  status: stat.statusFilter,
+                  ...((stat.statusFilter === "Delivered" || stat.statusFilter === "Cancelled") ? { process: "" } : {})
+                });
                 setSelectedOrders([]);
               }}
               className={`p-4 rounded-md border ${bgClass} flex items-center gap-4 cursor-pointer transition-all duration-200`}
@@ -417,7 +428,12 @@ export default function OrderMasterPage() {
           <div 
             key={i} 
             onClick={() => {
-              setFilters({ ...filters, process: filters.process === stat.title ? "" : stat.title });
+              const newProcess = filters.process === stat.title ? "" : stat.title;
+              setFilters({
+                ...filters,
+                process: newProcess,
+                ...(newProcess && (filters.status === "Delivered" || filters.status === "Cancelled") ? { status: "" } : {})
+              });
               setSelectedOrders([]);
             }}
             className={`flex-1 min-w-[120px] bg-white border ${filters.process === stat.title ? 'border-[#6A4FE0] ring-1 ring-[#6A4FE0]' : 'border-gray-200'} rounded-md p-2 flex items-start gap-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
@@ -485,7 +501,11 @@ export default function OrderMasterPage() {
                   <Select
                     value={filters.status}
                     onChange={v => {
-                      setFilters({ ...filters, status: v });
+                      setFilters({
+                        ...filters,
+                        status: v,
+                        ...((v === "Delivered" || v === "Cancelled") ? { process: "" } : {})
+                      });
                       setSelectedOrders([]);
                     }}
                     options={[
